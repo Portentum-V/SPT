@@ -17,4 +17,20 @@
   <ItemGroup>
     <Text Include="README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SPT_Client\Client_Nix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SPT_Client\Client_Win.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SPT_Client\Client_Utilities.cpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SPT_Client\Client_Utilities.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

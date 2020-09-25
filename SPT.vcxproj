@@ -141,6 +141,14 @@
   <ItemGroup>
     <Text Include="README.md" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="SPT_Client\Client_Nix.cpp" />
+    <ClCompile Include="SPT_Client\Client_Win.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SPT_Client\Client_Utilities.cpp" />
+    <ClInclude Include="SPT_Client\Client_Utilities.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
