@@ -1,5 +1,5 @@
 /**********************************************************/
-/* Client_Win.cpp                                         */
+/* Client_Win.c                                           */
 /* Provides IPv4 or IPv6 TCP connections for *Nix devices */
 /**********************************************************/
 
@@ -13,16 +13,18 @@
 
 #include "Client_Utilities.h"
 
-// Link with ws_32.lib <- Not sure if this is required?
+// Link with ws2_32.lib <- Not sure if this is required? -> It is...
 #pragma comment(lib, "Ws2_32.lib")
 
 /* Constants */
 #define MAXADDRSIZE 40 
 #define BUFFER 256
 
+int client(char* srv_addr, char* srv_port, int sock_type);
+
 int main(int argc, char* argv[])
 {
-    menu(argc, *argv, *client);
+    menu(argc, argv, *client);
     exit(0);
 }
 
@@ -33,12 +35,9 @@ int client(char* srv_addr, char* srv_port, int sock_type)
 
     /* Variables */
     int socket_descriptor = -1;
-    int recv_int, ret_val;
-    int bytes_recvd = 0;
-    int reuse = 1;
+    int ret_val = -1;
     int addr_len = 0;
 
-    char recv_buffer[BUFFER];
     char addr_str[MAXADDRSIZE];
 
     struct addrinfo hints, *addr_info, *AI;
@@ -53,6 +52,7 @@ int client(char* srv_addr, char* srv_port, int sock_type)
         fprintf(stderr, "WSAStartup failed with error %d\n", ret_val);
         WSACleanup();
         return -1;
+    }
 
     // Set the addrinfo struct to 0s
     memset(&hints, 0, sizeof(hints));
@@ -123,4 +123,12 @@ int client(char* srv_addr, char* srv_port, int sock_type)
             addr_str, ntohs(SS_PORT(&Addr)));
     }
     /* MAKE THIS A FUNCTION END? */
+    return 0;
 }
+/*
+int recv_file(int socket_descriptor) 
+{
+    int bytes_recvd = 0;
+    char recv_buffer[BUFFER];
+}
+*/

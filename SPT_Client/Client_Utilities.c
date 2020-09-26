@@ -1,19 +1,21 @@
-/*                                                         */
-/* Client_Utilities.cpp                                    */
+/***********************************************************/
+/* Client_Utilities.c                                      */
 /* Provides 'main' like functionaility to both Win and Nix */
-/*                                                         */
+/***********************************************************/
 
 /* Headers */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "Client_Utilities.h"
+
 /* Socket types. */
 #define SOCK_STREAM	1		/* stream (connection) socket	*/
 #define SOCK_DGRAM	2		/* datagram (conn.less) socket	*/
 #define SOCK_RAW	3		/* raw socket			        */
 
-/* Validates Port, returns 65535 if Invalid */
+/* Validates Port, returns -1 if Invalid */
 //unsigned short check_port(char* input)
 int check_port(char* input)
 {
@@ -36,9 +38,9 @@ int check_port(char* input)
 int menu(int argc, char* argv[], int (*client)(char*, char*, int))
 {
     char* str_port;
-    char* srv_addr;
+    char* str_addr;
     char* str_sock;
-    int sock_type;
+    int int_sock;
     int int_port;
 
     if (argc < 3) {
@@ -46,9 +48,9 @@ int menu(int argc, char* argv[], int (*client)(char*, char*, int))
         return -1;
     }
 
-    srv_addr = argv[1];
+    str_addr = argv[1];
     str_port = argv[2];
-    sock_type = SOCK_STREAM;
+    int_sock = SOCK_STREAM;
     int_port = check_port(str_port);
 
     if (-1 == int_port) {
@@ -59,13 +61,13 @@ int menu(int argc, char* argv[], int (*client)(char*, char*, int))
     if (argc == 4) {
         str_sock = argv[3];
         if (!strcmp("UDP", str_sock)) {
-            sock_type = SOCK_DGRAM;
+            int_sock = SOCK_DGRAM;
         }
     }
 
     printf("Launching SPT Client!\n");
-    printf("Attempting to connect to %s on %d...\n", srv_addr, int_port);
-    client(srv_addr, str_port, sock_type);
+    printf("Attempting to connect to %s on %d...\n", str_addr, int_port);
+    client(str_addr, str_port, int_sock);
     return 1;
 }
 

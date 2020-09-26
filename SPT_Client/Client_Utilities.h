@@ -1,3 +1,7 @@
+/***********************************************************/
+/* Client_Utilities.h                                      */
+/***********************************************************/
+
 #pragma once
-unsigned short check_port(char*);
-int menu(int, char*, int(*client)(char*, char*, int));
+int check_port(char* input);
+int menu(int argc, char* argv[], int (*client)(char*, char*, int));
