@@ -4,7 +4,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>ff1d0f23-7ea6-4dc2-91bf-a52f482cc05b</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>SPT_Server.py</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -21,7 +22,21 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="SPT_Server.py" />
+    <Compile Include="Server_Utilities.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Server_CLI.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Server_Session.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Server_Log.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Server_Manager.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
