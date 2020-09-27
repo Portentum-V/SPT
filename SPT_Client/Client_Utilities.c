@@ -10,11 +10,6 @@
 
 #include "Client_Utilities.h"
 
-/* Socket types. */
-#define SOCK_STREAM	1		/* stream (connection) socket	*/
-#define SOCK_DGRAM	2		/* datagram (conn.less) socket	*/
-#define SOCK_RAW	3		/* raw socket			        */
-
 /* Validates Port, returns -1 if Invalid */
 //unsigned short check_port(char* input)
 int check_port(char* input)
@@ -34,8 +29,8 @@ int check_port(char* input)
 // void (*client)(char*, unsigned short) 
 // Points to a function (client) that takes two arugments (a char* and an unsigned short)
 
-/* Essentially 'Main' but didn't want to write the code twice */
-int menu(int argc, char* argv[], int (*client)(char*, char*, int))
+/* Takes user input and returns a struct of addr, port, protocol if successful otherwise NULL */
+struct conn_info * menu(int argc, char* argv[])
 {
     char* str_port;
     char* str_addr;
@@ -43,19 +38,32 @@ int menu(int argc, char* argv[], int (*client)(char*, char*, int))
     int int_sock;
     int int_port;
 
+    struct conn_info *srv_info;
+    srv_info = NULL;
+
     if (argc < 3) {
         printf("Usage: %s {ip} {port}\n", argv[0]);
-        return -1;
+        return NULL;
     }
 
     str_addr = argv[1];
     str_port = argv[2];
     int_sock = SOCK_STREAM;
-    int_port = check_port(str_port);
 
+    if (40 < sizeof(str_addr)) {
+        fprintf(stderr, "Invalid address: %s", str_addr);
+        return NULL;
+    }
+
+    if (5 < sizeof(str_port)) {
+        fprintf(stderr, "Invalid Port: %s", str_port);
+        return NULL;
+    }
+
+    int_port = check_port(str_port); // Once the basic checks are passed, actually verify the port
     if (-1 == int_port) {
         fprintf(stderr, "Invalid Port: %s", str_port);
-        return -1;
+        return NULL;
     }
 
     if (argc == 4) {
@@ -65,10 +73,19 @@ int menu(int argc, char* argv[], int (*client)(char*, char*, int))
         }
     }
 
+    // Malloc and assign values to the struct
+    srv_info = (struct conn_info *) malloc(sizeof(struct conn_info));
+    if (srv_info == NULL) {
+        fprintf(stderr, "malloc() failed.\n");
+        return NULL;
+    }
+    strcpy_s(srv_info->srv_addr, sizeof(srv_info->srv_addr), str_addr);
+    strcpy_s(srv_info->srv_port, sizeof(srv_info->srv_port), str_port);
+    srv_info->int_sock = int_sock;
+
     printf("Launching SPT Client!\n");
-    printf("Attempting to connect to %s on %d...\n", str_addr, int_port);
-    client(str_addr, str_port, int_sock);
-    return 1;
+    printf("Attempting to connect to %s:%d...\n", str_addr, int_port);
+    return srv_info;
 }
 
 char encrypt(char reddata) {

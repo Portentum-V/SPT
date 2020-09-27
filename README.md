@@ -37,3 +37,8 @@ This project will be an effort to build lightweight c programs that can provide 
 - https://docs.microsoft.com/en-us/windows/win32/winsock/ipv6-enabled-client-code-2
 - https://beej.us/guide/bgnet/html//index.html#windows
 - https://tangentsoft.net/wskfaq/articles/bsd-compatibility.html
+
+### VS stuff...
+- https://marketplace.visualstudio.com/items?itemName=MaciejGudanowicz.AddMultipleProjectsToSolution
+- https://docs.microsoft.com/en-us/visualstudio/ide/solutions-and-projects-in-visual-studio?view=vs-2019
+- https://elanderson.net/2016/09/add-git-ignore-to-existing-visual-studio-project/

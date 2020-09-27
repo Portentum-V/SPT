@@ -16,19 +16,26 @@
 // Link with ws2_32.lib <- Not sure if this is required? -> It is...
 #pragma comment(lib, "Ws2_32.lib")
 
-/* Constants */
-#define MAXADDRSIZE 40 
-#define BUFFER 256
-
-int client(char* srv_addr, char* srv_port, int sock_type);
+int client(char* srv_addr, char* srv_port, int int_sock);
 
 int main(int argc, char* argv[])
 {
-    menu(argc, argv, *client);
+    struct conn_info* srv_info;
+
+    if ((srv_info = menu(argc, argv)) == NULL) {
+        exit(1);
+    }
+
+    client(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
+    //Do stuff and things
+
+    /* Clean Exit */
+    free(srv_info);
+    printf("Clean Exit\n");
     exit(0);
 }
 
-int client(char* srv_addr, char* srv_port, int sock_type)
+int client(char* srv_addr, char* srv_port, int int_sock)
 {
 
     WSADATA wsaData;
@@ -59,7 +66,7 @@ int client(char* srv_addr, char* srv_port, int sock_type)
     hints.ai_flags      = AI_NUMERICSERV; // Will not resolve server name
     hints.ai_flags     |= AI_NUMERICHOST; // Will not resolve host name
     hints.ai_family     = AF_UNSPEC;
-    hints.ai_socktype   = sock_type;      // 1: STREAM, 2: DGRAM, 3: RAW
+    hints.ai_socktype   = int_sock;      // 1: STREAM, 2: DGRAM, 3: RAW
 
     // Get address information
     ret_val = getaddrinfo(srv_addr, srv_port, &hints, &addr_info);
@@ -82,7 +89,7 @@ int client(char* srv_addr, char* srv_port, int sock_type)
         printf("Successful socket call > family: %d | socktype: %d | protocol: %d\n", AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
         // Establish connection to server (sets up remote mapping if DGRAM)
-        printf("Attempting to connect to %s:%s\n", srv_addr, srv_port);
+        // printf("Attempting to connect to %s:%s\n", srv_addr, srv_port);
 
         // If the connection fails, try the next addrinfo struct otherwise break
         if ((ret_val = connect(socket_descriptor, AI->ai_addr, AI->ai_addrlen)) < 0) {
@@ -102,10 +109,11 @@ int client(char* srv_addr, char* srv_port, int sock_type)
 
     /* MAKE THIS A FUNCTION? -> Prints connection information*/
     addr_len = sizeof(Addr);
-    if ((ret_val = getpeername(socket_descriptor, (LPSOCKADDR)&Addr, (int *) &addr_len)) < 0) { //does addr_len need to be cast?
+    if ((ret_val = getpeername(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
         fprintf(stderr, "getpeername() failed, error %d\n", ret_val);
     } 
     else {
+        getnameinfo((struct sockaddr*)&Addr, addr_len, addr_str, sizeof(addr_str), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
         printf("Connected to %s:%d via protocol %s on protocol family %s\n",
             addr_str, ntohs(SS_PORT(&Addr)),
             (AI->ai_socktype == SOCK_STREAM) ? "TCP" : "UDP",
@@ -115,14 +123,21 @@ int client(char* srv_addr, char* srv_port, int sock_type)
     // Finished with addrinfo chain
     freeaddrinfo(addr_info);
         
-    if ((ret_val = getsockname(socket_descriptor, (LPSOCKADDR)&Addr, &addr_len)) < 0) {
+    if ((ret_val = getsockname(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
         fprintf(stderr, "getsockname() failed with error %d\n", ret_val);
     }
     else {
+        getnameinfo((struct sockaddr*)&Addr, addr_len, addr_str, sizeof(addr_str), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
         printf("Using local socket %s:%d\n",
             addr_str, ntohs(SS_PORT(&Addr)));
     }
     /* MAKE THIS A FUNCTION END? */
+
+    // Clean up and return
+    shutdown(socket_descriptor, SD_SEND);
+    closesocket(socket_descriptor);
+    WSACleanup();
+    printf("Cleaned up Socket\n");
     return 0;
 }
 /*
