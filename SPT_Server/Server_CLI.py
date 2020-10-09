@@ -16,7 +16,7 @@ class manager_CLI(cmd.Cmd, object):
         self.manager = manager
         self.prompt = '(mngr)$ '
 
-    def do_exit(self):
+    def do_exit(self, input_str):
         """Exits manager_CLI
 
         Args:
@@ -28,7 +28,7 @@ class manager_CLI(cmd.Cmd, object):
         print("Closing manager...")
         self.manager.delete_all_sessions()
         print("Goodbye!")
-        quit()
+        return(1)
     do_EOF = do_exit
     do_quit = do_exit
     do_q = do_exit
@@ -40,7 +40,7 @@ class manager_CLI(cmd.Cmd, object):
         """Starts a listening session via create_session(addr, port, sock_type [0 = listen, 1 = connect]
 
         Args:
-            input: string of '<ip> <port>'
+            input_str: string of '<ip> <port>'
 
         Returns:
             None
@@ -54,7 +54,7 @@ class manager_CLI(cmd.Cmd, object):
             return
 
         new_index = self.manager.create_session(addr, port, 0)
-        print(f"Starting a listener on {addr}:{port} as session {new_index}")
+        #print(Xolor.INFO + f"Starting a listener on {addr}:{port} as session {new_index}" + Xolor.END)
 
     def help_listen(self):
         print("Listen for a connection")
@@ -71,20 +71,28 @@ class manager_CLI(cmd.Cmd, object):
         if index not in indexs:
             print(Xolor.WARN + f"Invalid index: {index}" + Xolor.END)
             return
-        print(f"Joining session {index}.")
         session = self.manager.join_session(index)
         sess_cli = session_CLI(session, index)
         sess_cli.cmdloop()
+
+    def help_session(self):
+        print("Join a running session - 'session 0'")
 
     def do_list(self, input_str):
         print(Xolor.CYAN + "Active Sessions" + Xolor.END)
         for index, addr, port in self.manager.list_sessions():
             print(f"{index} - {addr}:{port}")
 
+    def help_list(self):
+        print("List active sessions")
+
     def do_remove(self, input_str):
-        print("Removing input_str")
+        index = int(input_str.split()[0])
+        print(f"Closing session {index}")
+        self.manager.delete_session(index)
 
-
+    def help_remove(self):
+        print("Close a session")
 
 class session_CLI(cmd.Cmd, object):
     def __init__(self, session, index: int):
@@ -93,16 +101,14 @@ class session_CLI(cmd.Cmd, object):
         self.prompt = f'(session-{index})# '
     def do_exit(self, input_str):
         print("Leaving session...")
-        #manager.close()
-        print("Goodbye!")
-        quit()
+        return True
     do_EOF = do_exit
     do_quit = do_exit
     do_q = do_exit
     def help_exit(self):
         print('Exit session; alt Ctrl-D')
 
-    def do_burn(self):
+    def do_burn(self, input_str):
         print(Xolor.WARN + "Closing Session" + Xolor.END)
 
     def help_burn(self):
@@ -122,6 +128,7 @@ def main():
     manager = Manager()
     mgr_cli = manager_CLI(manager)
     mgr_cli.cmdloop()
+    return 1
 
 if __name__ == "__main__":
     main()

@@ -30,7 +30,7 @@ int check_port(char* input)
 // Points to a function (client) that takes two arugments (a char* and an unsigned short)
 
 /* Takes user input and returns a struct of addr, port, protocol if successful otherwise NULL */
-struct conn_info * menu(int argc, char* argv[])
+conn_info * menu(int argc, char* argv[])
 {
     char* str_port;
     char* str_addr;
@@ -38,8 +38,7 @@ struct conn_info * menu(int argc, char* argv[])
     int int_sock;
     int int_port;
 
-    struct conn_info *srv_info;
-    srv_info = NULL;
+    conn_info* srv_info = malloc(sizeof(conn_info));
 
     if (argc < 3) {
         printf("Usage: %s {ip} {port}\n", argv[0]);
@@ -82,9 +81,15 @@ struct conn_info * menu(int argc, char* argv[])
     strcpy_s(srv_info->srv_addr, sizeof(srv_info->srv_addr), str_addr);
     strcpy_s(srv_info->srv_port, sizeof(srv_info->srv_port), str_port);
     srv_info->int_sock = int_sock;
+    strcpy_s(srv_info->session_uuid, sizeof(srv_info->session_uuid), "000000000-0000-0000-0000-000000000000");
+
+    // Set default stuffs
+    srv_info->cmd_socket = -1;
+    srv_info->data_socket = -1;
+    srv_info->shell_socket = -1;
 
     printf("Launching SPT Client!\n");
-    printf("Attempting to connect to %s:%d...\n", str_addr, int_port);
+    printf("Attempting to connect to %s:%d\n", str_addr, int_port);
     return srv_info;
 }
 

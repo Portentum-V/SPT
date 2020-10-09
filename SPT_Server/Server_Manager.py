@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import threading
-import asyncio
 import datetime
+import errno
 
 from Server_Log import SPTLog, log_function_response, log_function
 from Server_Session import Session
@@ -19,6 +19,7 @@ class Manager(SPTLog):
         self.session_dict = dict()
         self.session_dict_lock = threading.Lock()
 
+    @log_function
     def create_session(self, addr, port, session_type):
         """Add and instantiate a session (listen or connect)
         index : [ sessionObject, list() ]
@@ -31,14 +32,21 @@ class Manager(SPTLog):
         Returns:
             An int reference to the session (index)
         """
-        new_session = Session(addr, port, session_type, self.logger)
+        try:
+            new_session = Session(addr, port, session_type, self.current_session_index, self.logger)
+        except OSError as e:
+            print(f"That socket and address is already in use! Error: {e}")
+            return self.current_session_index
+
         with self.session_dict_lock:
             self.session_dict[self.current_session_index] = [new_session, list()]
 
-        new_session.handle_session(addr, port, session_type)
+        new_session.start()
+
         self.current_session_index += 1
         return self.current_session_index - 1
 
+    @log_function
     def delete_session(self, index):
         """Removes and closes a session by index
 
@@ -52,6 +60,10 @@ class Manager(SPTLog):
             # Dict returns the key first followed by a list of vlaues ( index : [ sessionObject, list() ] )
             session, _ = self.session_dict.pop(index) 
         session.close_session(index)
+        #print("joining...")
+        #session.join()
+        print("Closing...")
+        session.cancel()
 
     def list_sessions(self):
         """Returns a list of (index, addr, port) tuples
@@ -68,6 +80,7 @@ class Manager(SPTLog):
                     for index in sorted(self.session_dict.keys())
                     ]
 
+    @log_function
     def join_session(self, index: int) -> Session:
         """Join a session object and issue it commands
 

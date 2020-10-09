@@ -16,7 +16,7 @@ class Xolor:
     ERROR = RED + '[!] '
     WARN = YELLOW + '[*] '
     OTHR = YELLOW + '[~] '
-    INFO = GREEN + '[?] '
+    INFO = GREEN + '[i] '
     SUCC = CYAN + '[+] '
     # End string
     END = '\033[0m'
