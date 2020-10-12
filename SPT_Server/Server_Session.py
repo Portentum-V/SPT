@@ -3,7 +3,7 @@ import threading
 import asyncio
 import uuid
 
-from Server_Log import info_log, log_function_response, log_function
+from Server_Log import info_log, error_log, log_function_response, log_function
 from Server_Utilities import Xolor, check_ip, check_port
 
 class Session(threading.Thread):
@@ -14,7 +14,8 @@ class Session(threading.Thread):
         Args:
             addr: Remote (or local) IPv4/IPv6 address
             port: Remote (or local) port
-            type: Listen (0) or Connection (1)
+            sesison_type: Listen (0) or Connection (1)
+            session_index: Dict index for this session
             logger: Super object that provides logging
 
         Returns:
@@ -24,6 +25,7 @@ class Session(threading.Thread):
         self.daemon = True
         self.cancelled = False
 
+        self.ready_event = threading.Event()
         self.logger = logger
         self.session_index = session_index
         self.addr = addr
@@ -35,18 +37,45 @@ class Session(threading.Thread):
         self.data_socket = ()
         self.shell_socket = ()
 
-        self.loop = asyncio.get_event_loop()
+        self.error = False
+
+        self.loop = asyncio.new_event_loop()
+        self.loop.set_exception_handler(self.handle_exception)
 
     def __str__(self):
         """
         Returns a representation of the object as a string
         """
-        return f"Session 0 - {self.addr}:{self.port}"
+        return f"Session {self.session_index} [{self.addr}:{self.port}]"
+
+    def handle_exception(self, loop, context):
+        """
+        This doesn't seem to work...
+        """
+        msg = context.get("exception", context["message"])
+        error_log(self, msg)
+        name = context.get("future").get_coro().__name__
+        if name == "handle_socket":
+            print(Xolor.ERROR + "Hey man, you already used that socket." + Xolor.END)
+        self.error = True
+        self.close_session()
+        return
+
+    async def shutdown(loop, signal=None):
+        if signal:
+            info_log(f"Received exit signal: {signal.name}")
+
 
     def run(self):
         """Override the run(_) function of Thread class"""
-        #print("(asyncio) Starting session thread")
-        asyncio.run(self.handle_cmd_socket(self.addr, self.port, self.session_type, self.cmd_socket))
+        info_log(self, "Starting cmd socket")
+        self.loop.create_task(self.handle_socket(self.addr, self.port, self.session_type, self.cmd_socket))
+        try:
+            self.loop.run_forever()
+        except AssertionError:
+            self.error = True
+            self.close_session()
+            return
 
     def cancel(self):
         """End this thread"""
@@ -64,7 +93,7 @@ class Session(threading.Thread):
         """
         return f"Session {self.addr}:{self.port} {self.session_type}"
 
-    def close_session(self, index: int):
+    def close_session(self):
         """
         Close the session nicely
 
@@ -74,7 +103,18 @@ class Session(threading.Thread):
         Returns:
             None
         """
-        info_log(self, "Ended session")
+        if self.cmd_socket:
+            print("Closing cmd socket")
+            self.cmd_socket[1].close()
+        if self.data_socket:
+            print("Closing data socket")
+            self.data_socket[1].close()
+        if self.shell_socket:
+            print("Closing shell socket")
+            self.shell_socket[1].close()
+        info_log(self, "Ended session clean")
+        self.ready_event.set()
+        self.cancel()
         return
         #print("Trying to close handlers...")
         #try:
@@ -85,49 +125,54 @@ class Session(threading.Thread):
         #    print("handlers already empty?")
         #    print(self.logger.handlers)
 
-    async def handle_cmd_socket(self, addr, port, session_type, sock):
+    async def handle_socket(self, addr, port, session_type, sock):
         """
         Handles initial network configuration for the session
 
         Args:
             addr: Remote (or local) IPv4/IPv6 address
             port: Remote (or local) port
-            session_type: Listen (0) or Connection (1)
+            session_type: Listen (0) or Connection (1)5
 
         Returns:
             None
         """
         if (0 == session_type):
 
-            #srv = await asyncio.start_server(self.listen_session, addr, port)
-            srv = await asyncio.start_server(lambda r, w: self.init_session(r, w, sock), addr, port)
+            srv = await asyncio.start_server(self.init_session, addr, port)
+            #srv = await asyncio.start_server(lambda r, w: self.init_session(r, w, sock), addr, port)
             srv_info = srv.sockets[0].getsockname()
             print(Xolor.INFO + f"Listening on {srv_info[0]}:{srv_info[1]} for connection as session {self.session_index}" + Xolor.END)
 
             async with srv:
+                self.ready_event.set()
                 await srv.serve_forever()
+                
 
         elif (1 == session_type):
             print(f"Attempting a connection to {addr}:{port}")
             reader, writer = asyncio.open_connection(addr, port)
+
         else:
             print(Xolor.ERROR + "Unknown session_type" + Xolor.END)
 
     async def listen_session(self, reader, writer, sock):
         await self.init_session(reader, writer)
 
-    async def init_session(self, reader, writer, sock):
-        sock = (reader, writer)
+    async def init_session(self, reader, writer):
+        #sock = (reader, writer)
         client_addr = writer.get_extra_info('peername')
         data = await reader.read(37)
         message = data.decode()
-        print(f"Received connect from {client_addr}: {message}")
-        print(f"Sending message: {self.session_uuid}")
-        #send_msg = f"Hello! {message}".encode()
+        print(Xolor.SUCC + f"Received connect from {client_addr}: {message}" + Xolor.END)
+        if message == "000000000-0000-0000-0000-000000000000":
+            print(f"Sending message: {self.session_uuid}")
+            self.cmd_socket = (reader, writer)
+        else:
+            send_msg = f"Hello! {message}".encode()
         writer.write(self.session_uuid.encode())
         await writer.drain()
-        print("Closing connection")
-        writer.close()
+
 
     async def connect_session(self, reader, writer):
         """
@@ -161,6 +206,17 @@ class Session(threading.Thread):
             None
         """
         print(f"Recving file {file}")
+
+    async def send_msg(self, msg):
+        if self.cmd_socket:
+            reader = self.cmd_socket[0]
+            writer = self.cmd_socket[1]
+            writer.write(msg.encode())
+            data = await reader.read(10)
+            print(f"Message: {data.decode()}")
+        else:
+            print("CMD socket not yet built!")
+            return -1
 
 """Resources
  - https://docs.python.org/3/library/asyncio-stream.html

@@ -19,7 +19,6 @@ class Manager(SPTLog):
         self.session_dict = dict()
         self.session_dict_lock = threading.Lock()
 
-    @log_function
     def create_session(self, addr, port, session_type):
         """Add and instantiate a session (listen or connect)
         index : [ sessionObject, list() ]
@@ -32,21 +31,22 @@ class Manager(SPTLog):
         Returns:
             An int reference to the session (index)
         """
-        try:
-            new_session = Session(addr, port, session_type, self.current_session_index, self.logger)
-        except OSError as e:
-            print(f"That socket and address is already in use! Error: {e}")
+
+        # Build and start the thread
+        new_session = Session(addr, port, session_type, self.current_session_index, self.logger)
+        new_session.start()
+        # wait until thread is initiliazed (read_event set) 
+        new_session.ready_event.wait()
+        # If there was an error, don't add the index to the dictionary
+        if new_session.error == True:
             return self.current_session_index
 
         with self.session_dict_lock:
             self.session_dict[self.current_session_index] = [new_session, list()]
 
-        new_session.start()
-
         self.current_session_index += 1
         return self.current_session_index - 1
 
-    @log_function
     def delete_session(self, index):
         """Removes and closes a session by index
 
@@ -59,10 +59,7 @@ class Manager(SPTLog):
         with self.session_dict_lock:
             # Dict returns the key first followed by a list of vlaues ( index : [ sessionObject, list() ] )
             session, _ = self.session_dict.pop(index) 
-        session.close_session(index)
-        #print("joining...")
-        #session.join()
-        print("Closing...")
+        session.close_session()
         session.cancel()
 
     def list_sessions(self):
@@ -80,7 +77,6 @@ class Manager(SPTLog):
                     for index in sorted(self.session_dict.keys())
                     ]
 
-    @log_function
     def join_session(self, index: int) -> Session:
         """Join a session object and issue it commands
 
@@ -90,7 +86,7 @@ class Manager(SPTLog):
         Returns:
             None
         """
-        print(f"Joining session {index}")
+        #print(f"Joining session {index}")
         with self.session_dict_lock:
             session, _ = self.session_dict[index]
         return session

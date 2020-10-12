@@ -10,8 +10,12 @@
 
 /* Constants */
 #define MAXADDRSIZE 40 
+#define HWADDRSIZE 13
 #define BUFFER 256
 #define UUID 39
+
+#define VENDORSIZE 13
+#define MODELSIZE 49
 
 /* Socket types. */
 #define SOCK_STREAM	1		/* stream (connection) socket	*/
@@ -20,13 +24,17 @@
 
 /* Structs */
 typedef struct conn_info {
+    /* Network information */
     char srv_addr[MAXADDRSIZE];
     char srv_port[6]; // Max port: 65535 (5 chars + Null = 6)
     int int_sock;
-    char session_uuid[UUID];
+    /* Sockets */
     int cmd_socket;
     int data_socket;
     int shell_socket;
+    /* Session information */
+    char session_uuid[UUID];
+
 } conn_info;
 
 /* Utility functions */

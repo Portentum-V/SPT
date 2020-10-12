@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import cmd
+
 from Server_Utilities import Xolor, check_ip, check_port
 from Server_Manager import Manager
 
@@ -25,16 +26,29 @@ class manager_CLI(cmd.Cmd, object):
         Returns:
             None
         """
-        print("Closing manager...")
-        self.manager.delete_all_sessions()
-        print("Goodbye!")
-        return(1)
+        if input_str == "BURN":
+            print("Closing manager...")
+            self.manager.delete_all_sessions()
+            print("Goodbye!")
+            return(1)
+        print(Xolor.WARN + "This will close ALL sessions" + Xolor.END)
+        burn = input("Type BURN if you wish to continue: ")
+        if burn == "BURN":
+            print("Closing manager...")
+            self.manager.delete_all_sessions()
+            print("Goodbye!")
+            return(1)
+        else:
+            pass
     do_EOF = do_exit
     do_quit = do_exit
     do_q = do_exit
 
     def help_exit(self):
         print('Exit and close all sessions; alt Ctrl-D')
+
+    def emptyLine(self):
+        pass
 
     def do_listen(self, input_str):
         """Starts a listening session via create_session(addr, port, sock_type [0 = listen, 1 = connect]
@@ -99,17 +113,24 @@ class session_CLI(cmd.Cmd, object):
         cmd.Cmd.__init__(self)
         self.session = session
         self.prompt = f'(session-{index})# '
+
     def do_exit(self, input_str):
         print("Leaving session...")
         return True
     do_EOF = do_exit
     do_quit = do_exit
     do_q = do_exit
+
     def help_exit(self):
         print('Exit session; alt Ctrl-D')
 
+    def emptyLine(self):
+        pass
+
     def do_burn(self, input_str):
         print(Xolor.WARN + "Closing Session" + Xolor.END)
+        self.session.close_session()
+        self.do_exit()
 
     def help_burn(self):
         print('Burn session, attempting to stop the remote client and end the session')
@@ -122,6 +143,9 @@ class session_CLI(cmd.Cmd, object):
 
     def do_shell(self, input_str):
         print("Dropping into remote shell")
+
+    def do_send(self, input_str):
+        self.session.send_msg(input_str)
 
 def main():
     print(Xolor.CYAN + "Starting STP Server" + Xolor.END)

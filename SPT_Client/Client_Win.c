@@ -6,44 +6,76 @@
 /* Unique Headers */
 #include <winsock2.h>
 #include <ws2tcpip.h>
+/* IP_ADAPTER_INFO && PIP_ADAPTER_INFO */
+#include <iphlpapi.h> 
 
 #include "Client_Utilities.h"
+#include "cpuid.h"
 
 // Link with ws2_32.lib <- Not sure if this is required? -> It is...
 #pragma comment(lib, "Ws2_32.lib")
+#pragma comment(lib, "IPHLPAPI.lib")
 
-/* Once a bit further, these should be moved to Client_Utilities.h*/
-int remote_connect(char* srv_addr, char* srv_port, int int_sock);
+/* One day this will have a .h file */
+int create_socket(char* srv_addr, char* srv_port, int int_sock);
 int cleanup_socket(int socket_descriptor);
+
 int get_connection_information(int socket_descriptor, struct addrinfo* AI);
+int get_mac_address(char* network_address);
+
 int send_message(int socket_descriptor, char* buffer, size_t buffer_size);
 int recv_message(int socket_descriptor, char* buffer, size_t buffer_size);
+int echo_recv(int socket_descriptor);
+int recv_file(conn_info* srv_info, char* file_name, int file_size);
 
 int build_cmd_socket(conn_info* srv_info);
 
 /* This will contain the main loop that responds to commands from the server */
 int main(int argc, char* argv[])
 {
-    int exit_status = 0;
+    int ret_val = 0;
+    int i = 0;
+    void* buffer = malloc(10);
+
+    int cpuid_flags;
+    char hostname[256] = { '\0' };
+
     conn_info* srv_info = malloc(sizeof(conn_info));
     if (srv_info == NULL) {
         fprintf(stderr, "Failed to malloc conn_info\n");
-        exit_status = -1;
+        ret_val = -1;
         goto exit;
     }
     memset(srv_info, 0, sizeof(conn_info));
 
     if ((srv_info = menu(argc, argv)) == NULL) {
         fprintf(stderr, "Failed to get input from menu\n");
-        exit_status = -1;
+        ret_val = -1;
         goto exit;
     }
 
-    exit_status = build_cmd_socket(srv_info);
-    if (exit_status == -1) {
+    ret_val = build_cmd_socket(srv_info);
+    if (ret_val == -1) {
         fprintf(stderr, "build_cmd_socket failed\n");
         goto exit;
     }
+
+    cpuid_flags = get_cpuid_flags();
+    printf("\nCPUID: %d\n", cpuid_flags);
+    gethostname(hostname, 256);
+    printf("Hostname: %s\n\n", hostname);
+
+    get_mac_address(hostname);
+
+    //recv_file(srv_info, "tmp.txt", 200);
+
+    printf("Starting cmd loop\n");
+    //ret_val = 0;
+    //while (ret_val == 0) {
+        //printf("Loop: %d\n", i);
+        //i++;
+        ret_val = echo_recv(srv_info->cmd_socket);
+    //} 
 
     /* Clean Exit */
 exit:
@@ -60,7 +92,7 @@ exit:
     }
     free(srv_info);
     printf("Clean Exit\n");
-    exit(exit_status);
+    exit(ret_val);
 }
 
 /*  build_cmd_socket
@@ -72,38 +104,70 @@ exit:
 */
 int build_cmd_socket(conn_info* srv_info)
 {
+
     int ret_val = 0;
+
     char *buffer = malloc(BUFFER);
     if (buffer == NULL) {
-        fprintf(stderr, "Build_cmd_socket: Malloc failed: NULL\n");
+        fprintf(stderr, "Build_cmd_socket: buffer Malloc failed - NULL\n");
         ret_val = -1;
         goto exit;
     }
     memset(buffer, 0, BUFFER);
 
-    srv_info->cmd_socket = remote_connect(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
+    srv_info->cmd_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
     if (srv_info->cmd_socket == -1) {
         ret_val = -1;
         goto exit;
     }
-    printf("cmd_socket successfully set: %d\n", srv_info->cmd_socket);
+    //printf("cmd_socket successfully set: %d\n", srv_info->cmd_socket);
 
     /* Send empty session_uuid (0000) and recv actual session_uuid */
-    ret_val = send_message(srv_info->cmd_socket, srv_info->session_uuid, UUID);
+    ret_val = send(srv_info->cmd_socket, srv_info->session_uuid, UUID, 0);
     if (ret_val == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to send message\n");
         goto exit;
     }
-    ret_val = recv_message(srv_info->cmd_socket, buffer, UUID);
+    ret_val = recv(srv_info->cmd_socket, buffer, UUID, 0);
     if (ret_val == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to recv message\n");
         goto exit;
     }
+    /*
+    else {
+        printf("Message: %s", buffer);
+    } */
     strncpy_s(srv_info->session_uuid, UUID, buffer, UUID);
-    printf("UUID succesfully set: %s\n", srv_info->session_uuid);
+    printf("Session UUID succesfully set: %s\n", srv_info->session_uuid);
 
 exit:
     free(buffer);
+    return ret_val;
+}
+
+int echo_recv(int socket_descriptor)
+{
+    int ret_val = 0;
+    void* buffer = malloc(10);
+    if (buffer == NULL) {
+        fprintf(stderr, "Malloc failed");
+        ret_val = -1;
+        goto exit;
+    }
+
+    ret_val = recv(socket_descriptor, buffer, 10, 0);
+    if (-1 == ret_val) {
+        fprintf(stderr, "recv() failed with error %d\n", ret_val);
+        goto exit;
+    } 
+
+    ret_val = send(socket_descriptor, buffer, 10, 0);
+    if (-1 == ret_val) {
+        fprintf(stderr, "send() failed with error %d\n", ret_val);
+        goto exit;
+    }
+
+exit:
     return ret_val;
 }
 
@@ -127,7 +191,7 @@ int build_data_socket(conn_info* srv_info)
     return 0;
 }
 
-/* remote_connect
+/* create_socket
 * Does the leg work to build a socket with some basic error handling 
 * 
 * @char* srv_addr: The address to connect to
@@ -136,7 +200,7 @@ int build_data_socket(conn_info* srv_info)
 * 
 * @Returns: if successful, returns an int socket descriptor, otherwise -1
 */
-int remote_connect(char* srv_addr, char* srv_port, int int_sock)
+int create_socket(char* srv_addr, char* srv_port, int int_sock)
 {
     WSADATA wsaData;
 
@@ -208,6 +272,93 @@ int remote_connect(char* srv_addr, char* srv_port, int int_sock)
     return socket_descriptor;
 }
 
+/* get_mac_address
+* Iterates over the available network adapaters and returns the MAC assocated with the address provided. AF_UNSPEC SAFE!!!
+* Alternatively, could probably use ARP
+* 
+* @char * network_address: 
+* 
+* @returns: -1 on fail.
+* 
+*/
+int get_mac_address(char * network_address)
+{
+    int ret_val = 0;
+    unsigned int i = 0;
+    char hw_str[HWADDRSIZE] = { 0 };
+    char two_bytes[3] = { 0 };
+
+    socklen_t addr_len = 0;
+    char addr_str[MAXADDRSIZE] = { 0 };
+    struct sockaddr_storage addr = { 0 };
+    addr_len = sizeof(addr);
+
+    ULONG flags = 0x0010; // GAA_FLAG_INCLUDE_PREFIX (Show IPv4 and IPv6)
+    ULONG family = AF_UNSPEC; // 0
+
+    PIP_ADAPTER_INFO ptr_addresses = NULL;
+    ULONG out_buf_len = 0;
+
+    PIP_ADAPTER_ADDRESSES ptr_current_addresses = NULL;
+    PIP_ADAPTER_UNICAST_ADDRESS ptr_unicast_address = NULL;
+
+    out_buf_len = sizeof(IP_ADAPTER_ADDRESSES);
+    ptr_addresses = (IP_ADAPTER_ADDRESSES*)malloc(out_buf_len); 
+
+    // Ensure ptr_addresses size is correct
+    if (GetAdaptersAddresses(family, flags, NULL, ptr_addresses, &out_buf_len) == ERROR_BUFFER_OVERFLOW) {
+        realloc(ptr_addresses, out_buf_len);
+    }
+    if (ptr_addresses == NULL) {
+        fprintf(stderr, "Failed to malloc/realloc for GetAdaptersAddresses(), error: %d", ret_val);
+        ret_val = -1;
+        goto exit;
+    }
+
+    printf("Memory allocated for GetAdapterAddresses = %d bytes\n", out_buf_len);
+    // Actually call GetAdaptersAddresses for data
+    ret_val = GetAdaptersAddresses(family, flags, NULL, ptr_addresses, &out_buf_len);
+    if (ret_val == NO_ERROR) { // NO_ERROR == 0
+        ptr_current_addresses = ptr_addresses;
+        while (ptr_current_addresses) {
+            ptr_unicast_address = ptr_current_addresses->FirstUnicastAddress;
+            while (ptr_unicast_address != NULL) {
+                addr = *(struct sockaddr_storage*)ptr_unicast_address->Address.lpSockaddr;
+                getnameinfo((struct sockaddr*)&addr, addr_len, addr_str, sizeof(addr_str), NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
+                printf("Unicast: %s\n", addr_str);
+                ptr_unicast_address = ptr_unicast_address->Next;
+            }
+            if (ptr_current_addresses->PhysicalAddressLength != 0) {
+                printf("\tPhysical: ");
+                for (i = 0; i < ptr_current_addresses->PhysicalAddressLength;
+                    i++) {
+                    if (i == (ptr_current_addresses->PhysicalAddressLength - 1))
+                        sprintf_s(two_bytes, 3, "%.2X\0",
+                            (int)ptr_current_addresses->PhysicalAddress[i]);
+                    else
+                        sprintf_s(two_bytes, 3, "%.2X",
+                            (int)ptr_current_addresses->PhysicalAddress[i]);
+                    strncat_s(hw_str, HWADDRSIZE, two_bytes, 2);
+                }
+                printf("%s\n", hw_str);
+                memset(hw_str, 0, HWADDRSIZE);
+            }
+            ptr_current_addresses = ptr_current_addresses->Next;
+        }
+    }
+    else {
+        fprintf(stderr, "GetAdapterAddresses failed, error: %d", ret_val);
+        ret_val = -1;
+        goto exit;
+    }
+
+    ret_val = 0;
+
+exit:
+    free(ptr_addresses);
+    return ret_val;
+}
+
 /*  get_connection_information
 * Provides various socket information like local & remote IP:PORT along with protocol family (IPv4/6)
 *
@@ -267,6 +418,8 @@ int send_message(int socket_descriptor, char* buffer, size_t buffer_size)
     return ret_val;
 }
 
+
+/* THIS IS USELESS CODE LOL */
 /*  recv_message
 * Receive data  via a socket
 * 
@@ -283,14 +436,13 @@ int recv_message(int socket_descriptor, char* buffer, size_t buffer_size)
     recv_amount = recv(socket_descriptor, buffer, buffer_size, 0);
     if (-1 == recv_amount) {
         fprintf(stderr, "recv() failed with error %d\n", recv_amount);
-        return recv_amount;
-    }
+    } /*
     else if (0 == recv_amount) {
         printf("Recevied 0\n");
     }
     else {
         printf("Message: %s\n", buffer);
-    }
+    } */
 
     return recv_amount;
 }
@@ -316,8 +468,70 @@ int cleanup_socket(int socket_descriptor)
 *
 *
 */
-int recv_file(int socket_descriptor) 
+int recv_file(conn_info* srv_info, char *file_name, int file_size)
 {
+    int i;
+    int ret_val = 0;
     int bytes_recvd = 0;
-    char recv_buffer[BUFFER];
+    FILE* new_file = NULL;
+
+    void* recv_buffer = malloc(BUFFER);
+    if (recv_buffer == NULL) {
+        fprintf(stderr, "recv_file: failed to malloc buffer");
+        ret_val = -1;
+        goto exit;
+    }
+
+    ret_val = fopen_s(&new_file, file_name, "wb");
+    if (new_file == NULL) {
+        fprintf(stderr, "Failed to open file %s", file_name);
+        ret_val = -1;
+        goto exit;
+    }
+
+    srv_info->data_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
+    if (-1 == srv_info->data_socket) {
+        printf("Failed to build socket for file download: %s", file_name);
+        ret_val = -1;
+        goto exit;
+    }
+
+    // Send UUID and expected file?
+    ret_val = send(srv_info->data_socket, srv_info->session_uuid, UUID, 0);
+    if (-1 == ret_val) {
+        fprintf(stderr, "recv_file: UUID send() failed with error %d\n", ret_val);
+        goto exit;
+    }
+    ret_val = send(srv_info->data_socket, file_name, strlen(file_name) + 1, 0);
+    if (-1 == ret_val) {
+        fprintf(stderr, "recv_file: file_name send() failed with error %d\n", ret_val);
+        goto exit;
+    }
+
+    printf("Socket established and ACK for %s sent\n", file_name);
+
+    for (i = 0; i < file_size; i += bytes_recvd) {
+        bytes_recvd = recv(srv_info->data_socket, recv_buffer, BUFFER, 0);
+        if (-1 == bytes_recvd) {
+            fprintf(stderr, "recv() failed with error %d\n", bytes_recvd);
+            ret_val = -1;
+            goto exit;
+        }
+        else if (0 == bytes_recvd) {
+            printf("Reached end of file\n");
+        }
+        fwrite(recv_buffer, BUFFER, 1, new_file);
+    }
+
+exit:
+    if (new_file != NULL) {
+        fclose(new_file);
+    }
+    if (srv_info->data_socket != -1) {
+        cleanup_socket(srv_info->data_socket);
+        srv_info->data_socket = -1;
+    }
+    free(recv_buffer);
+    return ret_val;
+
 }
