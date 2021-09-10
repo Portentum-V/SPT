@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import threading
-import asyncio
 import uuid
+import threading
+
+import asyncio
 
 from Server_Log import info_log, error_log, log_function_response, log_function
 from Server_Utilities import Xolor, check_ip, check_port
@@ -56,7 +57,7 @@ class Session(threading.Thread):
         error_log(self, msg)
         name = context.get("future").get_coro().__name__
         if name == "handle_socket":
-            print(Xolor.ERROR + "Hey man, you already used that socket." + Xolor.END)
+            print(Xolor.ERROR + "That socket is already in use" + Xolor.END)
         self.error = True
         self.close_session()
         return
@@ -112,6 +113,7 @@ class Session(threading.Thread):
         if self.shell_socket:
             print("Closing shell socket")
             self.shell_socket[1].close()
+        #self.loop.stop()
         info_log(self, "Ended session clean")
         self.ready_event.set()
         self.cancel()
@@ -160,17 +162,29 @@ class Session(threading.Thread):
         await self.init_session(reader, writer)
 
     async def init_session(self, reader, writer):
-        #sock = (reader, writer)
         client_addr = writer.get_extra_info('peername')
-        data = await reader.read(37)
-        message = data.decode()
+        #data = await reader.read(5)
+        # First read the amount of the next message?
+        data = await reader.read(43)
+        message = data.decode().split()
         print(Xolor.SUCC + f"Received connect from {client_addr}: {message}" + Xolor.END)
-        if message == "000000000-0000-0000-0000-000000000000":
+        if message[0] == "000000000-0000-0000-0000-000000000000" and message[1] == "init\x00":
             print(f"Sending message: {self.session_uuid}")
+            writer.write(self.session_uuid.encode())
             self.cmd_socket = (reader, writer)
+        elif message[0] == self.session_uuid:
+            if message[1] == "gets\x00":
+                print("Downloading file from client to server")
+            elif message[1] == "puts\x00":
+                print("Uploading file from server to client")
+            elif message[1] == "shel\x00":
+                print("Shell callback from client")
+            else:
+                print(Xolor.WARN + f"Should I handle this command? : {message[1]}" + Xolor.END)
         else:
+            print(Xolor.WARN + f"Not sure who that is that connected, but its not for this session..." + Xolor.END)
             send_msg = f"Hello! {message}".encode()
-        writer.write(self.session_uuid.encode())
+        
         await writer.drain()
 
 
@@ -207,12 +221,13 @@ class Session(threading.Thread):
         """
         print(f"Recving file {file}")
 
-    async def send_msg(self, msg):
+    def send_msg(self, msg):
         if self.cmd_socket:
             reader = self.cmd_socket[0]
             writer = self.cmd_socket[1]
+
             writer.write(msg.encode())
-            data = await reader.read(10)
+            data = reader.read(10)
             print(f"Message: {data.decode()}")
         else:
             print("CMD socket not yet built!")

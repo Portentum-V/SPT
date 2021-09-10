@@ -21,7 +21,7 @@ class manager_CLI(cmd.Cmd, object):
         """Exits manager_CLI
 
         Args:
-            None
+            input_str: if 'BURN' quit without confirmation
 
         Returns:
             None
@@ -47,7 +47,7 @@ class manager_CLI(cmd.Cmd, object):
     def help_exit(self):
         print('Exit and close all sessions; alt Ctrl-D')
 
-    def emptyLine(self):
+    def emptyline(self):
         pass
 
     def do_listen(self, input_str):
@@ -124,7 +124,7 @@ class session_CLI(cmd.Cmd, object):
     def help_exit(self):
         print('Exit session; alt Ctrl-D')
 
-    def emptyLine(self):
+    def emptyline(self):
         pass
 
     def do_burn(self, input_str):
@@ -151,7 +151,10 @@ def main():
     print(Xolor.CYAN + "Starting STP Server" + Xolor.END)
     manager = Manager()
     mgr_cli = manager_CLI(manager)
-    mgr_cli.cmdloop()
+    try:
+        mgr_cli.cmdloop()
+    except KeyboardInterrupt:
+        manager.delete_all_sessions()
     return 1
 
 if __name__ == "__main__":

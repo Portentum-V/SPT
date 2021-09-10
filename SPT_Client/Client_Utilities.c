@@ -3,11 +3,6 @@
 /* Provides 'main' like functionaility to both Win and Nix */
 /***********************************************************/
 
-/* Headers */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "Client_Utilities.h"
 
 /* Validates Port, returns -1 if Invalid */
@@ -91,6 +86,101 @@ conn_info * menu(int argc, char* argv[])
     printf("Launching SPT Client!\n");
     printf("Attempting to connect to %s:%d\n", str_addr, int_port);
     return srv_info;
+}
+
+
+/*  get_connection_information
+* Provides various socket information like local & remote IP:PORT along with protocol family (IPv4/6)
+*
+* @int socket_descriptor: The socket to interact with
+* @struct addrinfo* AI: The pointer to an addrinfo struct that will hold the relevent information
+*
+* @returns: -1 on failure, 0 on success
+*/
+int get_connection_information(int socket_descriptor)
+{
+    int ret_val = -1;
+    uint32_t addr_len = 0;  //Alt for socklen_t without having to include network headers: unisgned opaque of at least 32 bits 
+    struct sockaddr_storage Addr;
+    char remote_addr_str[MAXADDRSIZE];
+    char remote_port_str[32];
+    char local_addr_str[MAXADDRSIZE];
+    char local_port_str[32];
+
+    addr_len = sizeof(Addr);
+    if ((ret_val = getpeername(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
+        fprintf(stderr, "getpeername() failed, error %d\n", ret_val);
+        return -1;
+    }
+    else {
+        getnameinfo((struct sockaddr*)&Addr, addr_len,
+            remote_addr_str, MAXADDRSIZE,
+            remote_port_str, 32,
+            NI_NUMERICHOST | NI_NUMERICSERV);
+        /*
+        printf("Connected to %s:%d via %s over %s\n",
+            remote_addr_str, ntohs(SS_PORT(&Addr)),
+            (AI->ai_socktype == SOCK_STREAM) ? "TCP" : "UDP",
+            (AI->ai_family == PF_INET) ? "PF_INET" : "PF_INET6");
+        */
+    }
+
+    if ((ret_val = getsockname(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
+        fprintf(stderr, "getsockname() failed with error %d\n", ret_val);
+        return -1;
+    }
+    else {
+        getnameinfo((struct sockaddr*)&Addr, addr_len,
+            local_addr_str, MAXADDRSIZE,
+            local_port_str, 32,
+            NI_NUMERICHOST | NI_NUMERICSERV);
+        /*
+        printf("Using local socket %s:%d\n",
+            local_addr_str, ntohs(SS_PORT(&Addr)));
+        */
+    }
+
+    printf("local| %s:%s <---> %s:%s |remote\n",
+        local_addr_str, local_port_str,
+        remote_addr_str, remote_addr_str);
+
+    return 0;
+}
+
+
+/*  send_message
+* Send data via a socket, add session information followed by a message
+*
+* @int socket_descriptor: The socket to be used
+* @char* buffer: The data to be sent
+* @size_t buffer_size: The size of the data to be sent
+*
+* @Returns: -1 on failure, otherwise the number of bytes sent
+*/
+int send_message(conn_info* srv_info, int socket_descriptor, char* buffer, size_t buffer_size)
+{
+    int ret_val = 0;
+    int msg_size = UUID + buffer_size;
+    char* msg = malloc(msg_size);
+    if (msg == NULL) {
+        fprintf(stderr, "send_message: Failed to malloc for msg");
+        ret_val = -1;
+        goto exit;
+    }
+
+    memcpy_s(msg, msg_size, srv_info->session_uuid, UUID);
+    memcpy_s(msg + UUID - 2, msg_size, " ", 1);
+    memcpy_s(msg + UUID - 1, msg_size - UUID, buffer, buffer_size);
+
+    ret_val = send(socket_descriptor, msg, msg_size, 0);
+    if (-1 == ret_val) {
+        fprintf(stderr, "send() failed with error %d\n", ret_val);
+    }
+
+    printf("Sent message: %s\n", msg);
+
+exit:
+    return ret_val;
 }
 
 char encrypt(char reddata) {
