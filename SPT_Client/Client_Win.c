@@ -149,6 +149,7 @@ int echo_recv(int socket_descriptor)
 
     printf("Sent: %s\n", buffer);
 
+FAIL:
 exit:
     return ret_val;
 }
@@ -195,6 +196,7 @@ int build_data_socket(conn_info* srv_info)
         goto exit;
     }
 
+FAIL:
 exit:
     free(buffer);
     return ret_val;
@@ -387,6 +389,7 @@ int get_mac_address(char * network_address)
 
     ret_val = 0;
 
+FAIL:
 exit:
     free(ptr_addresses);
     return ret_val;
@@ -498,6 +501,7 @@ int recv_file(conn_info* srv_info, char *file_name, int file_size)
         fwrite(recv_buffer, BUFFER, 1, new_file);
     }
 
+FAIL:
 exit:
     if (new_file != NULL) {
         fclose(new_file);

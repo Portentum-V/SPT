@@ -51,3 +51,14 @@ This project will be an effort to build lightweight c programs that can provide 
 
 ### Windows
 - https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms740504(v=vs.85)
+
+## Ideas
+#### System Design Interview - Alex Xu
+ - Message queue (p22): Input services create messages which are published to a queue. Other services read the queue and perform actions defined by the messages
+ - Metrics (p23): understand the health of the system [CPU, Memory, I/O, etc]
+ - Latency (p35): Disk is slow, compression is fast
+ - Hearbeat (p224): Client sends a 'heartbeat' every Xs, if not seen for Ys assumed to be offline
+ - File transfer (p294): Split (block) -> Compress -> Encrypt -> Send
+
+#### Designing Data-Intensive Applications
+ - Maintainability (p19): Operability (keep the system running), Simplicity (remove as much complexity as possible), Evolvability (changing/adapting should be easy)

@@ -14,6 +14,7 @@
 #include <winsock2.h>
 #endif
 
+#include "Client_Error.h"
 
 /* Constants */
 #define MAXADDRSIZE 40 

@@ -8,7 +8,7 @@ try:
     from pyreadline import Readline
     readline = Readline()
 except ImportError:
-    print(Xolor.WARN + "Looks like you don't have pyreadlines installed, tab comleteion won't work :(" + Xolor.END)
+    print(Xolor.WARN + "Looks like you don't have pyreadlines installed, tab completion won't work :(" + Xolor.END)
     pass
 
 class manager_CLI(cmd.Cmd, object):
