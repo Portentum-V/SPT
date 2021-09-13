@@ -4,6 +4,10 @@
 
 This project will be an effort to build lightweight c programs that can provide file transfer utility and command line access to remote devices, along with a python server to control multiple clients.
 
+### Framework
+ - [ ] Encoding / Serilization (ProtoBufs?)
+ - [ ] Message format
+
 ### Windows Client
 - [ ] Network communication
 - [ ] cmd
