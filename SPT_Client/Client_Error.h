@@ -8,6 +8,7 @@
 #define ERRORCODE_UNKNOWN	1
 #define ERRORCODE_GENERIC   2
 #define ERRORCODE_FAILED	3
+#define ERRORCODE_ALLOCATE  4
 
 #define FAIL_IF(condition, error) if (condition) {errcode = error; goto FAIL;}
 #define FAIL_IF_PRT(condition, string, error) if (condition) {errocode = error; fprintf(stderr, string); goto FAIL;}

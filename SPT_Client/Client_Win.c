@@ -84,11 +84,13 @@ int build_cmd_socket(conn_info* srv_info)
     int ret_val = 0;
 
     char *buffer = malloc(BUFFER);
+    FAIL_IF_PRT(buffer == NULL, "Build_cmd_socket: buffer Malloc failed - NULL\n", ERRORCODE_ALLOCATE);
+    /*
     if (buffer == NULL) {
         fprintf(stderr, "Build_cmd_socket: buffer Malloc failed - NULL\n");
         ret_val = -1;
         goto exit;
-    }
+    } */
     memset(buffer, 0, BUFFER);
 
     srv_info->cmd_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
