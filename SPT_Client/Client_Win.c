@@ -84,7 +84,7 @@ int build_cmd_socket(conn_info* srv_info)
     int ret_val = 0;
 
     char *buffer = malloc(BUFFER);
-    FAIL_IF_PRT(buffer == NULL, "Build_cmd_socket: buffer Malloc failed - NULL\n", ERRORCODE_ALLOCATE);
+    FAIL_IF_JMP(buffer == NULL, ERRORCODE_ALLOCATE, "Build_cmd_socket: buffer Malloc failed - NULL ptr\n");
     /*
     if (buffer == NULL) {
         fprintf(stderr, "Build_cmd_socket: buffer Malloc failed - NULL\n");
@@ -94,13 +94,16 @@ int build_cmd_socket(conn_info* srv_info)
     memset(buffer, 0, BUFFER);
 
     srv_info->cmd_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
+    FAIL_IF_JMP(srv_info->cmd_socket == -1, ERRORCODE_SOCKET, "Build_cmd_socket: create_socket failed\n");
+    /*
     if (srv_info->cmd_socket == -1) {
         ret_val = -1;
         goto exit;
-    }
+    } */
     //printf("cmd_socket successfully set: %d\n", srv_info->cmd_socket);
 
     /* Send empty session_uuid (0000) and recv actual session_uuid */
+    // Here is 'message' should be encoded, compressed, encrypted before being sent
     ret_val = send_message(srv_info, srv_info->cmd_socket, "init", 5); //Playing with struct like [ UUID CMMD SIZE ]
     //ret_val = send(srv_info->cmd_socket, srv_info->session_uuid, UUID, 0);
     if (ret_val == -1) {

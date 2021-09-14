@@ -4,11 +4,11 @@
 /**********************************************************/
 
 #if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
-#include "Client_Win.h" // Windows
+    #include "Client_Win.h" // Windows
 #endif
 
 #ifdef linux
-//*Nix
+    //*Nix
 #endif
 
 #include "cpuid.h"
@@ -22,25 +22,32 @@ int main(int argc, char* argv[])
     int cpuid_flags;
     char hostname[257] = { '\0' };
 
+    conn_info* srv_info = NULL;
+    /*
     conn_info* srv_info = malloc(sizeof(conn_info));
     if (srv_info == NULL) {
         fprintf(stderr, "Failed to malloc conn_info\n");
         ret_val = -1;
         goto exit;
-    }
-    memset(srv_info, 0, sizeof(conn_info));
+    } 
+    memset(srv_info, 0, sizeof(conn_info)); */
 
+    srv_info = menu(argc, argv);
+    FAIL_IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, "main: Failed to get conn_info ptr from menu\n");
+    /*
     if ((srv_info = menu(argc, argv)) == NULL) {
         fprintf(stderr, "Failed to get input from menu\n");
         ret_val = -1;
         goto exit;
-    }
+    } */
 
     ret_val = build_cmd_socket(srv_info);
+    FAIL_IF_JMP(-1 == ret_val, ERRORCODE_GENERIC, "main: build_cmd_socket failed\n");
+    /*
     if (ret_val == -1) {
         fprintf(stderr, "build_cmd_socket failed\n");
         goto exit;
-    }
+    } */
 
     cpuid_flags = get_cpuid_flags();
     printf("\nCPUID: %d\n", cpuid_flags);
@@ -60,6 +67,7 @@ int main(int argc, char* argv[])
     } */
 
     /* Clean Exit */
+FAIL:
 exit:
     if (srv_info != NULL) {
         if (-1 < srv_info->cmd_socket) {

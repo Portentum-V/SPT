@@ -5,7 +5,9 @@
 This project will be an effort to build lightweight c programs that can provide file transfer utility and command line access to remote devices, along with a python server to control multiple clients.
 
 ### Framework
- - [ ] Encoding / Serilization (ProtoBufs?)
+ - [ ] Encoding / Serilization (nanopb: https://github.com/nanopb/nanopb)
+ - [ ] Compression (fastLZ: https://github.com/ariya/FastLZ)
+ - [ ] Encryption (SSL?)
  - [ ] Message format
 
 ### Windows Client

@@ -9,6 +9,9 @@
 #define ERRORCODE_GENERIC   2
 #define ERRORCODE_FAILED	3
 #define ERRORCODE_ALLOCATE  4
+#define ERRORCODE_SOCKET    5
 
-#define FAIL_IF(condition, error) if (condition) {errcode = error; goto FAIL;}
-#define FAIL_IF_PRT(condition, string, error) if (condition) {errocode = error; fprintf(stderr, string); goto FAIL;}
+extern unsigned int errorcode;
+
+#define FAIL_IF_JMP(condition, error, ...) if (condition) { errorcode = error; fprintf(stderr, __VA_ARGS__); goto FAIL; }
+#define FAIL_IF_RET(condition, ret, ...) if (condition) { fprintf(stderr, __VA_ARGS__); return retVal; }
