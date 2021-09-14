@@ -179,7 +179,7 @@ int get_connection_information(int socket_descriptor)
 int send_message(conn_info* srv_info, int socket_descriptor, char* buffer, size_t buffer_size)
 {
     int ret_val = 0;
-    int msg_size = UUID + buffer_size;
+    int msg_size = UUID_SIZE + buffer_size;
     char* msg = malloc(msg_size);
     if (msg == NULL) {
         fprintf(stderr, "send_message: Failed to malloc for msg");
@@ -187,9 +187,9 @@ int send_message(conn_info* srv_info, int socket_descriptor, char* buffer, size_
         goto exit;
     }
 
-    memcpy_s(msg, msg_size, srv_info->session_uuid, UUID);
-    memcpy_s(msg + UUID - 2, msg_size, " ", 1);
-    memcpy_s(msg + UUID - 1, msg_size - UUID, buffer, buffer_size);
+    memcpy_s(msg, msg_size, srv_info->session_uuid, UUID_SIZE);
+    memcpy_s(msg + UUID_SIZE - 2, msg_size, " ", 1);
+    memcpy_s(msg + UUID_SIZE - 1, msg_size - UUID_SIZE, buffer, buffer_size);
 
     ret_val = send(socket_descriptor, msg, msg_size, 0);
     if (-1 == ret_val) {

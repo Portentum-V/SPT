@@ -11,7 +11,7 @@
 //{
 //    int ret_val = 0;
 //    int i = 0;
-//    void* buffer = malloc(UUID);
+//    void* buffer = malloc(UUID_SIZE);
 //
 //    int cpuid_flags;
 //    char hostname[257] = { '\0' };
@@ -105,12 +105,12 @@ int build_cmd_socket(conn_info* srv_info)
     /* Send empty session_uuid (0000) and recv actual session_uuid */
     // Here is 'message' should be encoded, compressed, encrypted before being sent
     ret_val = send_message(srv_info, srv_info->cmd_socket, "init", 5); //Playing with struct like [ UUID CMMD SIZE ]
-    //ret_val = send(srv_info->cmd_socket, srv_info->session_uuid, UUID, 0);
+    //ret_val = send(srv_info->cmd_socket, srv_info->session_uuid, UUID_SIZE, 0);
     if (ret_val == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to send message\n");
         goto exit;
     }
-    ret_val = recv(srv_info->cmd_socket, buffer, UUID, 0);
+    ret_val = recv(srv_info->cmd_socket, buffer, UUID_SIZE, 0);
     if (ret_val == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to recv message\n");
         goto exit;
@@ -119,7 +119,7 @@ int build_cmd_socket(conn_info* srv_info)
     else {
         printf("Message: %s", buffer);
     } */
-    strncpy_s(srv_info->session_uuid, UUID, buffer, UUID);
+    strncpy_s(srv_info->session_uuid, UUID_SIZE, buffer, UUID_SIZE);
     printf("Session UUID succesfully set: %s\n", srv_info->session_uuid);
 
 exit:
@@ -187,7 +187,7 @@ int build_data_socket(conn_info* srv_info)
     memset(buffer, 0, BUFFER);
 
     //Check that a session UUID is set
-    if (!strncmp(srv_info->session_uuid, "000000000-0000-0000-0000-000000000000", UUID)) {
+    if (!strncmp(srv_info->session_uuid, "000000000-0000-0000-0000-000000000000", UUID_SIZE)) {
         fprintf(stderr, "Build_cmd_socket: Session UUID not set\n");
         ret_val = -1;
         goto exit;
@@ -480,7 +480,7 @@ int recv_file(conn_info* srv_info, char *file_name, int file_size)
     }
 
     // Send UUID and expected file?
-    ret_val = send(srv_info->data_socket, srv_info->session_uuid, UUID, 0);
+    ret_val = send(srv_info->data_socket, srv_info->session_uuid, UUID_SIZE, 0);
     if (-1 == ret_val) {
         fprintf(stderr, "recv_file: UUID send() failed with error %d\n", ret_val);
         goto exit;

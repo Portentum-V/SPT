@@ -20,7 +20,7 @@
 #define MAXADDRSIZE 40 
 #define HWADDRSIZE 13
 #define BUFFER 256
-#define UUID 39
+#define UUID_SIZE 39
 
 #define VENDORSIZE 13
 #define MODELSIZE 49
@@ -41,7 +41,7 @@ typedef struct conn_info {
     int data_socket;
     int shell_socket;
     /* Session information */
-    char session_uuid[UUID];
+    char session_uuid[UUID_SIZE];
 
 } conn_info;
 

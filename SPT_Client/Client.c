@@ -16,7 +16,7 @@
 int main(int argc, char* argv[])
 {
     int ret_val = 0;
-    void* buffer = malloc(UUID);
+    void* buffer = malloc(UUID_SIZE);
     int cpuid_flags;
     char hostname[257] = { '\0' };
     conn_info* srv_info = NULL;
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     /* Clean Exit */
 FAIL:
 exit:
-    if (srv_info != NULL) {
+    if (NULL != srv_info) {
         if (-1 < srv_info->cmd_socket) {
             cleanup_socket(srv_info->cmd_socket);
         }
