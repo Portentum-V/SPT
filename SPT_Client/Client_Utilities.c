@@ -208,3 +208,21 @@ char encrypt(char reddata) {
     blackdata = reddata;
     return blackdata;
 }
+
+int buffer_append(void **buffer,
+                  size_t *buffer_len, size_t *buffer_size,
+                  void *data, size_t data_len)
+{
+    void *new_buffer = NULL;
+    size_t need = *buffer_len + data_len;
+    if (need > *buffeR_size) {
+        new_buffer = realloc(*buffer, need);
+        FAIL_IF_RET(NULL == new_buffer, -1, "Failed to realloc for buffer resize\n");
+        *buffer = new_buffer;
+    }
+    
+    memcpy(*buffer + *buffer_len, data, data_len);
+    *buffer_len += data_len;
+    return 0;
+}
+        
