@@ -61,7 +61,7 @@ conn_info * menu(int argc, char* argv[])
     }*/
 
     int_port = check_port(str_port); // Once the basic checks are passed, actually verify the port
-    FAIL_IF_JMP(-1 == int_port), NULL, "Invalid Port: %s", str_port);
+    FAIL_IF_JMP(-1 == int_port, NULL, "Invalid Port: %s", str_port);
     /*
     if (-1 == int_port) {
         fprintf(stderr, "Invalid Port: %s", str_port);
@@ -94,7 +94,7 @@ conn_info * menu(int argc, char* argv[])
     srv_info->data_socket = -1;
     srv_info->shell_socket = -1;
 
-    goto SUCCESS:
+    goto SUCCESS;
 
 FAIL:
     printf("Failed to launch SPT Client! ERRORCODE: %d", errorcode);
