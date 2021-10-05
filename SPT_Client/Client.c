@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
 
     /* Clean Exit */
 FAIL:
-exit:
     if (NULL != srv_info) {
         if (-1 < srv_info->cmd_socket) {
             cleanup_socket(srv_info->cmd_socket);

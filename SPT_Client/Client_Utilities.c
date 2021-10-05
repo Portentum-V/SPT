@@ -21,9 +21,6 @@ int check_port(char* input)
     }
 }
 
-// void (*client)(char*, unsigned short) 
-// Points to a function (client) that takes two arugments (a char* and an unsigned short)
-
 /* Takes user input and returns a struct of addr, port, protocol if successful otherwise NULL */
 conn_info * menu(int argc, char* argv[])
 {
@@ -36,37 +33,16 @@ conn_info * menu(int argc, char* argv[])
     conn_info* srv_info = malloc(sizeof(conn_info));
 
     FAIL_IF_JMP(argc < 3, NULL, "Usage:%s {ip} {port}\n", argv[0]);
-    /* 
-    if (argc < 3) {
-        printf("Usage: %s {ip} {port}\n", argv[0]);
-        return NULL;
-    } */
 
     str_addr = argv[1];
     str_port = argv[2];
     int_sock = SOCK_STREAM;
 
     FAIL_IF_JMP(40 < sizeof(str_addr), NULL, "Invalid address: %s", str_addr);
-    /*
-    if (40 < sizeof(str_addr)) {
-        fprintf(stderr, "Invalid address: %s", str_addr);
-        return NULL;
-    } */
-
     FAIL_IF_JMP(5 < sizeof(str_port), NULL, "Invlaid Port: %s", str_port);
-    /*
-    if (5 < sizeof(str_port)) {
-        fprintf(stderr, "Invalid Port: %s", str_port);
-        return NULL;
-    }*/
 
     int_port = check_port(str_port); // Once the basic checks are passed, actually verify the port
     FAIL_IF_JMP(-1 == int_port, NULL, "Invalid Port: %s", str_port);
-    /*
-    if (-1 == int_port) {
-        fprintf(stderr, "Invalid Port: %s", str_port);
-        return NULL;
-    } */
 
     if (argc == 4) {
         str_sock = argv[3];
@@ -77,12 +53,7 @@ conn_info * menu(int argc, char* argv[])
 
     // Malloc and assign values to the struct
     srv_info = (struct conn_info *) malloc(sizeof(struct conn_info));
-    FAIL_IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, "menu: conn_info malloc failed - NULL ptr");
-    /*
-    if (srv_info == NULL) {
-        fprintf(stderr, "malloc() failed.\n");
-        return NULL;
-    } */
+    FAIL_IF_JMP(NULL == srv_info, "menu: conn_info malloc failed - NULL ptr");
 
     strcpy_s(srv_info->srv_addr, sizeof(srv_info->srv_addr), str_addr);
     strcpy_s(srv_info->srv_port, sizeof(srv_info->srv_port), str_port);
@@ -126,6 +97,9 @@ int get_connection_information(int socket_descriptor)
     char local_addr_str[MAXADDRSIZE];
     char local_port_str[32];
 
+    int sock_type = -1;
+    unsigned int sock_type_len = sizeof(sock_type); // socklen_t ?
+
     addr_len = sizeof(Addr);
     if ((ret_val = getpeername(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
         fprintf(stderr, "getpeername() failed, error %d\n", ret_val);
@@ -159,8 +133,11 @@ int get_connection_information(int socket_descriptor)
         */
     }
 
-    printf("local| %s:%s <---> %s:%s |remote\n",
+    ret_val = getsockopt(socket_descriptor, SOL_SOCKET, SO_TYPE, &sock_type, &sock_type_len);
+
+    printf("local| %s:%s <-%s-> %s:%s |remote\n",
         local_addr_str, local_port_str,
+        sock_type == SOCK_STREAM ? "TCP" : "UDP",
         remote_addr_str, remote_addr_str);
 
     return 0;
@@ -215,7 +192,7 @@ int buffer_append(void **buffer,
 {
     void *new_buffer = NULL;
     size_t need = *buffer_len + data_len;
-    if (need > *buffeR_size) {
+    if (need > *buffer_size) {
         new_buffer = realloc(*buffer, need);
         FAIL_IF_RET(NULL == new_buffer, -1, "Failed to realloc for buffer resize\n");
         *buffer = new_buffer;
