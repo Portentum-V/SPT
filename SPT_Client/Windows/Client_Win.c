@@ -47,10 +47,6 @@ int build_cmd_socket(conn_info* srv_info)
     printf("Session UUID succesfully set: %s\n", srv_info->session_uuid);
 
 FAIL:
-<<<<<<< HEAD:SPT_Client/Windows/Client_Win.c
-exit:
-=======
->>>>>>> 62e708728bd4c2e97c4bc28b989e02e942d59b16:SPT_Client/Client_Win.c
     free(buffer);
     return ret_val;
 }

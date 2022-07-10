@@ -34,29 +34,17 @@ conn_info * menu(int argc, char* argv[])
 
     conn_info* srv_info = malloc(sizeof(conn_info));
 
-<<<<<<< HEAD
     IF_JMP(argc < 3, ERRORCODE_INPUT, FAIL, "Usage:%s {ip} {port}\n", argv[0]);
-=======
-    FAIL_IF_JMP(argc < 3, NULL, "Usage:%s {ip} {port}\n", argv[0]);
->>>>>>> 62e708728bd4c2e97c4bc28b989e02e942d59b16
 
     str_addr = argv[1];
     str_port = argv[2];
     int_sock = SOCK_STREAM;
 
-<<<<<<< HEAD
     IF_JMP(40 < sizeof(str_addr), ERRORCODE_INPUT, FAIL, "Invalid address: %s", str_addr);
     IF_JMP(5 < sizeof(str_port), ERRORCODE_INPUT, FAIL, "Invlaid Port: %s", str_port);
 
     int_port = check_port(str_port); // Once the basic checks are passed, actually verify the port
     IF_JMP(-1 == int_port, ERRORCODE_INPUT, FAIL, "Invalid Port: %s", str_port);
-=======
-    FAIL_IF_JMP(40 < sizeof(str_addr), NULL, "Invalid address: %s", str_addr);
-    FAIL_IF_JMP(5 < sizeof(str_port), NULL, "Invlaid Port: %s", str_port);
-
-    int_port = check_port(str_port); // Once the basic checks are passed, actually verify the port
-    FAIL_IF_JMP(-1 == int_port, NULL, "Invalid Port: %s", str_port);
->>>>>>> 62e708728bd4c2e97c4bc28b989e02e942d59b16
 
     if (argc == 4) {
         str_sock = argv[3];
@@ -67,11 +55,8 @@ conn_info * menu(int argc, char* argv[])
 
     // Malloc and assign values to the struct
     srv_info = (struct conn_info *) malloc(sizeof(struct conn_info));
-<<<<<<< HEAD
     IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, FAIL, "menu: conn_info malloc failed - NULL ptr");
-=======
-    FAIL_IF_JMP(NULL == srv_info, "menu: conn_info malloc failed - NULL ptr");
->>>>>>> 62e708728bd4c2e97c4bc28b989e02e942d59b16
+
 
     strcpy_s(srv_info->srv_addr, sizeof(srv_info->srv_addr), str_addr);
     strcpy_s(srv_info->srv_port, sizeof(srv_info->srv_port), str_port);
