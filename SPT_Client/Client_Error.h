@@ -14,5 +14,8 @@
 
 extern unsigned int errorcode;
 
-#define IF_JMP(condition, error, jump, ...) if (condition) { errorcode = error; fprintf(stderr, __VA_ARGS__); goto jump; }
-#define IF_RET(condition, error, retval, ...) if (condition) { errorcode = error; fprintf(stderr, __VA_ARGS__); return retval; }
+#define NUMARGS(...) sizeof(int[]){__VA_ARGS__}) / sizeof(int)
+// #define FAIL_IF_JMP(con, err, ...) if (con) { errorcode = err; fprintf(stderr, __VA_ARGS__); goto FAIL; }
+#define IF_JMP(con, err, jmp, str, ...) do { if (con) { errorcode = error; fprintf(stderr, str, ##__VA_ARGS__); goto jmp; } } while(0);
+// #define FAIL_IF_RET(con, ret, ...) if (con) { fprintf(stderr, __VA_ARGS__); return ret; }
+#define IF_RET(con, err, ret, str, ...) do { if (con) {  errorcode = error; fprintf(stderr, str, ##__VA_ARGS__); return ret; } } while(0);

@@ -32,12 +32,12 @@ int build_cmd_socket(conn_info* srv_info)
     //ret_val = send(srv_info->cmd_socket, srv_info->session_uuid, UUID_SIZE, 0);
     if (ret_val == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to send message\n");
-        goto exit;
+        goto FAIL;
     }
     ret_val = recv(srv_info->cmd_socket, buffer, UUID_SIZE, 0);
     if (ret_val == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to recv message\n");
-        goto exit;
+        goto FAIL;
     }
     /*
     else {
@@ -47,7 +47,10 @@ int build_cmd_socket(conn_info* srv_info)
     printf("Session UUID succesfully set: %s\n", srv_info->session_uuid);
 
 FAIL:
+<<<<<<< HEAD:SPT_Client/Windows/Client_Win.c
 exit:
+=======
+>>>>>>> 62e708728bd4c2e97c4bc28b989e02e942d59b16:SPT_Client/Client_Win.c
     free(buffer);
     return ret_val;
 }
