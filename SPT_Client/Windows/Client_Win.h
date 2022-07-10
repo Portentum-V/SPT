@@ -1,5 +1,5 @@
 /***********************************************************/
-/* Client_Win.h                                      */
+/* Client_Win.h                                            */
 /***********************************************************/
 
 #pragma once
@@ -9,9 +9,8 @@
 /* IP_ADAPTER_INFO && PIP_ADAPTER_INFO */
 #include <iphlpapi.h> 
 
-#include "Client_Utilities.h"
+#include "..\\Client_Utilities.h"
 
-// Link with ws2_32.lib <- Not sure if this is required? -> It is...
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "IPHLPAPI.lib")
 
@@ -27,3 +26,5 @@ int echo_recv(int socket_descriptor);
 int recv_file(conn_info* srv_info, char* file_name, int file_size);
 
 int build_cmd_socket(conn_info* srv_info);
+
+void print_wsaerror();

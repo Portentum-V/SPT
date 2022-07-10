@@ -5,6 +5,8 @@
 
 #include "Client_Utilities.h"
 
+unsigned int errorcode = ERRORCODE_UNKNOWN;
+
 /* Validates Port, returns -1 if Invalid */
 //unsigned short check_port(char* input)
 int check_port(char* input)
@@ -35,38 +37,17 @@ conn_info * menu(int argc, char* argv[])
 
     conn_info* srv_info = malloc(sizeof(conn_info));
 
-    FAIL_IF_JMP(argc < 3, NULL, "Usage:%s {ip} {port}\n", argv[0]);
-    /* 
-    if (argc < 3) {
-        printf("Usage: %s {ip} {port}\n", argv[0]);
-        return NULL;
-    } */
+    IF_JMP(argc < 3, ERRORCODE_INPUT, FAIL, "Usage:%s {ip} {port}\n", argv[0]);
 
     str_addr = argv[1];
     str_port = argv[2];
     int_sock = SOCK_STREAM;
 
-    FAIL_IF_JMP(40 < sizeof(str_addr), NULL, "Invalid address: %s", str_addr);
-    /*
-    if (40 < sizeof(str_addr)) {
-        fprintf(stderr, "Invalid address: %s", str_addr);
-        return NULL;
-    } */
-
-    FAIL_IF_JMP(5 < sizeof(str_port), NULL, "Invlaid Port: %s", str_port);
-    /*
-    if (5 < sizeof(str_port)) {
-        fprintf(stderr, "Invalid Port: %s", str_port);
-        return NULL;
-    }*/
+    IF_JMP(40 < sizeof(str_addr), ERRORCODE_INPUT, FAIL, "Invalid address: %s", str_addr);
+    IF_JMP(5 < sizeof(str_port), ERRORCODE_INPUT, FAIL, "Invlaid Port: %s", str_port);
 
     int_port = check_port(str_port); // Once the basic checks are passed, actually verify the port
-    FAIL_IF_JMP(-1 == int_port), NULL, "Invalid Port: %s", str_port);
-    /*
-    if (-1 == int_port) {
-        fprintf(stderr, "Invalid Port: %s", str_port);
-        return NULL;
-    } */
+    IF_JMP(-1 == int_port, ERRORCODE_INPUT, FAIL, "Invalid Port: %s", str_port);
 
     if (argc == 4) {
         str_sock = argv[3];
@@ -77,12 +58,7 @@ conn_info * menu(int argc, char* argv[])
 
     // Malloc and assign values to the struct
     srv_info = (struct conn_info *) malloc(sizeof(struct conn_info));
-    FAIL_IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, "menu: conn_info malloc failed - NULL ptr");
-    /*
-    if (srv_info == NULL) {
-        fprintf(stderr, "malloc() failed.\n");
-        return NULL;
-    } */
+    IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, FAIL, "menu: conn_info malloc failed - NULL ptr");
 
     strcpy_s(srv_info->srv_addr, sizeof(srv_info->srv_addr), str_addr);
     strcpy_s(srv_info->srv_port, sizeof(srv_info->srv_port), str_port);
@@ -94,13 +70,14 @@ conn_info * menu(int argc, char* argv[])
     srv_info->data_socket = -1;
     srv_info->shell_socket = -1;
 
-    goto SUCCESS:
+    goto SUCCESS;
 
 FAIL:
-    printf("Failed to launch SPT Client! ERRORCODE: %d", errorcode);
+    printf("Failed to launch SPT Client! ERRORCODE: %d\n", errorcode);
     if (NULL != srv_info) 
         free(srv_info);
     return NULL;
+
 SUCCESS:
     printf("Launching SPT Client!\n");
     printf("Attempting to connect to %s:%d\n", str_addr, int_port);

@@ -117,7 +117,7 @@ static int get_cpuid_flags(void)
     if (cpuid(info, &eax, &model[0], &model[2], &model[1]) != -1) {
         /* printf("Vendor (raw): %X %X %X\n", model[0], model[2], model[1]);
         printf("Vendor: %s\n", model); */
-        strncpy_s(vendor_str, 13, model, 12);
+        strncpy_s(vendor_str, 13, (char *)model, 12);
     }
 
     printf("Vendor Str: %s\n", vendor_str);
@@ -134,7 +134,7 @@ static int get_cpuid_flags(void)
         }
     }
     /* printf("\nModel: %s\n", model); */
-    strncpy_s(model_str, 49, model, 48);
+    strncpy_s(model_str, 49, (char *)model, 48);
     printf("Model Str: %s\n", model_str);
 
     return flags;

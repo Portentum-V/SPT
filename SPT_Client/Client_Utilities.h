@@ -12,6 +12,8 @@
 
 #if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
 #include <winsock2.h>
+#include <ws2tcpip.h>              /* Provides getnameinfo for get_connection_information */
+#pragma comment(lib, "Ws2_32.lib") /* Provides ws2tcpip.h */
 #endif
 
 #include "Client_Error.h"
@@ -25,10 +27,14 @@
 #define VENDORSIZE 13
 #define MODELSIZE 49
 
-/* Socket types. */
+/* Socket types */
 #define SOCK_STREAM	1		/* stream (connection) socket	*/
 #define SOCK_DGRAM	2		/* datagram (conn.less) socket	*/
 #define SOCK_RAW	3		/* raw socket			        */
+
+/* Connection types */
+#define SOCK_CONN 1
+#define SOCK_BIND 2
 
 /* Structs */
 typedef struct conn_info {
@@ -52,6 +58,3 @@ conn_info* menu(int argc, char* argv[]);
 int get_connection_information(int socket_descriptor);
 
 int send_message(conn_info* srv_info, int socket_descriptor, char* buffer, size_t buffer_size);
-
-
-//int menu(int argc, char* argv[], int (*client)(char*, char*, int)); // Switch to passing a struct in the event the data is useful again.

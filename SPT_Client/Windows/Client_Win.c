@@ -6,71 +6,6 @@
 #pragma once
 #include "Client_Win.h"
 
-/* This will contain the main loop that responds to commands from the server */
-//int main(int argc, char* argv[])
-//{
-//    int ret_val = 0;
-//    int i = 0;
-//    void* buffer = malloc(UUID_SIZE);
-//
-//    int cpuid_flags;
-//    char hostname[257] = { '\0' };
-//
-//    conn_info* srv_info = malloc(sizeof(conn_info));
-//    if (srv_info == NULL) {
-//        fprintf(stderr, "Failed to malloc conn_info\n");
-//        ret_val = -1;
-//        goto exit;
-//    }
-//    memset(srv_info, 0, sizeof(conn_info));
-//
-//    if ((srv_info = menu(argc, argv)) == NULL) {
-//        fprintf(stderr, "Failed to get input from menu\n");
-//        ret_val = -1;
-//        goto exit;
-//    }
-//
-//    ret_val = build_cmd_socket(srv_info);
-//    if (ret_val == -1) {
-//        fprintf(stderr, "build_cmd_socket failed\n");
-//        goto exit;
-//    }
-//
-//    cpuid_flags = get_cpuid_flags();
-//    printf("\nCPUID: %d\n", cpuid_flags);
-//    gethostname(hostname, 256);
-//    printf("Hostname: %s\n\n", hostname);
-//
-//    get_mac_address(buffer);
-//
-//    //recv_file(srv_info, "tmp.txt", 200);
-//
-//    /* printf("Starting cmd loop\n");
-//    ret_val = 0;
-//    while (ret_val == 0) {
-//        printf("Loop: %d\n", i);
-//        i++;
-//        ret_val = echo_recv(srv_info->cmd_socket);
-//    } */
-//
-//    /* Clean Exit */
-//exit:
-//    if (srv_info != NULL) {
-//        if (-1 < srv_info->cmd_socket) {
-//            cleanup_socket(srv_info->cmd_socket);
-//        }
-//        if (-1 < srv_info->data_socket) {
-//            cleanup_socket(srv_info->data_socket);
-//        }
-//        if (-1 < srv_info->shell_socket) {
-//            cleanup_socket(srv_info->data_socket);
-//        }
-//    }
-//    free(srv_info);
-//    printf("Clean Exit\n");
-//    exit(ret_val);
-//}
-
 /*  build_cmd_socket
 * By the end of this function, should have a cmd_socket and session_uuid set in the conn_info struct
 *
@@ -84,22 +19,11 @@ int build_cmd_socket(conn_info* srv_info)
     int ret_val = 0;
 
     char *buffer = malloc(BUFFER);
-    FAIL_IF_JMP(buffer == NULL, ERRORCODE_ALLOCATE, "Build_cmd_socket: buffer Malloc failed - NULL ptr\n");
-    /*
-    if (buffer == NULL) {
-        fprintf(stderr, "Build_cmd_socket: buffer Malloc failed - NULL\n");
-        ret_val = -1;
-        goto exit;
-    } */
+    IF_JMP(buffer == NULL, ERRORCODE_ALLOCATE, FAIL, "Build_cmd_socket: buffer Malloc failed - NULL ptr\n");
     memset(buffer, 0, BUFFER);
 
-    srv_info->cmd_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
-    FAIL_IF_JMP(srv_info->cmd_socket == -1, ERRORCODE_SOCKET, "Build_cmd_socket: create_socket failed\n");
-    /*
-    if (srv_info->cmd_socket == -1) {
-        ret_val = -1;
-        goto exit;
-    } */
+    srv_info->cmd_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock, SOCK_CONN);
+    IF_JMP(srv_info->cmd_socket == -1, ERRORCODE_SOCKET, FAIL, "Build_cmd_socket: create_socket failed\n");
     //printf("cmd_socket successfully set: %d\n", srv_info->cmd_socket);
 
     /* Send empty session_uuid (0000) and recv actual session_uuid */
@@ -122,6 +46,7 @@ int build_cmd_socket(conn_info* srv_info)
     strncpy_s(srv_info->session_uuid, UUID_SIZE, buffer, UUID_SIZE);
     printf("Session UUID succesfully set: %s\n", srv_info->session_uuid);
 
+FAIL:
 exit:
     free(buffer);
     return ret_val;
@@ -194,7 +119,7 @@ int build_data_socket(conn_info* srv_info)
     }
 
     // Eventually specify the addr:port/protocol to receive from?
-    srv_info->data_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
+    srv_info->data_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock, 2);
     if (srv_info->data_socket == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to build data socket\n");
         ret_val = -1;
@@ -223,7 +148,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
     /* Variables */
     int socket_descriptor = -1;
     int ret_val = -1;
-    int sockopt = 1;
+    const char sockopt = 1;
 
     struct addrinfo hints, *addr_info, *AI;
     //struct socket socket_descriptor = INVALID_SOCKET; // incomplete type is not allowed?
@@ -262,7 +187,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
 
         printf("Successful socket call > family: %d | socktype: %d | protocol: %d\n", AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
-        if (2 == conn_type) {
+        if (SOCK_BIND == conn_type) {
             ret_val = setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt));
             if (-1 == ret_val) {
                 fprintf(stderr, "Setting SO_REUSEADDR failed, error: %d", errno);
@@ -273,7 +198,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
         // Establish connection to server (sets up remote mapping if DGRAM)
         // printf("Attempting to connect to %s:%s\n", srv_addr, srv_port);
 
-        if (1 == conn_type && 2 != sock_type) {
+        if (SOCK_CONN == conn_type && SOCK_DGRAM != sock_type) {
             // If the connection fails, try the next addrinfo struct otherwise break
             if ((ret_val = connect(socket_descriptor, AI->ai_addr, AI->ai_addrlen)) < 0) {
                 fprintf(stderr, "Connect() failed, error %d\n", ret_val);
@@ -282,7 +207,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
             else break;
         }
         /* Bind */
-        else if (2 == conn_type) {
+        else if (SOCK_BIND == conn_type) {
             ret_val = bind(socket_descriptor, AI->ai_addr, AI->ai_addrlen);
             if (0 != ret_val) {
                 fprintf(stderr, "Connect() failed, error: %d\n", errno);
@@ -305,7 +230,10 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
 
     printf("Valid socket created: %d\n", socket_descriptor);
 
-    get_connection_information(socket_descriptor);
+    ret_val = get_connection_information(socket_descriptor);
+    if (ret_val < 0) {
+        print_wsaerror();
+    }
 
     return socket_descriptor;
 }
@@ -331,10 +259,10 @@ int get_mac_address(char * network_address)
     struct sockaddr_storage addr = { 0 };
     addr_len = sizeof(addr);
 
-    ULONG flags = 0x0010; // GAA_FLAG_INCLUDE_PREFIX (Show IPv4 and IPv6)
-    ULONG family = AF_UNSPEC; // 0
+    ULONG flags = 0x0010;     /* GAA_FLAG_INCLUDE_PREFIX (Show IPv4 and IPv6) */
+    ULONG family = AF_UNSPEC; /* 0 */
 
-    PIP_ADAPTER_INFO ptr_addresses = NULL;
+    PIP_ADAPTER_ADDRESSES ptr_addresses = NULL;
     ULONG out_buf_len = 0;
 
     PIP_ADAPTER_ADDRESSES ptr_current_addresses = NULL;
@@ -342,9 +270,9 @@ int get_mac_address(char * network_address)
     PIP_ADAPTER_ADDRESSES tmp = NULL;
 
     out_buf_len = sizeof(IP_ADAPTER_ADDRESSES);
-    ptr_addresses = (IP_ADAPTER_ADDRESSES*)malloc(out_buf_len); 
+    ptr_addresses = (PIP_ADAPTER_ADDRESSES)malloc(out_buf_len); 
 
-    // Ensure ptr_addresses size is correct
+    /* Ensure ptr_addresses size is correct */
     if (GetAdaptersAddresses(family, flags, NULL, ptr_addresses, &out_buf_len) == ERROR_BUFFER_OVERFLOW) {
         tmp = realloc(ptr_addresses, out_buf_len);
         if (tmp == NULL) {
@@ -356,9 +284,9 @@ int get_mac_address(char * network_address)
     }
 
     printf("Memory allocated for GetAdapterAddresses = %d bytes\n", out_buf_len);
-    // Actually call GetAdaptersAddresses for data
+    /* Actually call GetAdaptersAddresses for data */
     ret_val = GetAdaptersAddresses(family, flags, NULL, ptr_addresses, &out_buf_len);
-    if (ret_val == NO_ERROR) { // NO_ERROR == 0
+    if (ret_val == NO_ERROR) { /* NO_ERROR == 0 */
         ptr_current_addresses = ptr_addresses;
         while (ptr_current_addresses) {
             ptr_unicast_address = ptr_current_addresses->FirstUnicastAddress;
@@ -472,7 +400,7 @@ int recv_file(conn_info* srv_info, char *file_name, int file_size)
         goto exit;
     }
 
-    srv_info->data_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock);
+    srv_info->data_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock, 2);
     if (-1 == srv_info->data_socket) {
         printf("Failed to build socket for file download: %s", file_name);
         ret_val = -1;
@@ -518,4 +446,15 @@ exit:
     free(recv_buffer);
     return ret_val;
 
+}
+
+void print_wsaerror() 
+{
+    wchar_t *s = NULL;
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
+                   NULL, WSAGetLastError(),
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (LPWSTR)&s, 0, NULL);
+    fprintf(stderr, "%S\n", s);
+    LocalFree(s);
 }

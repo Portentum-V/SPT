@@ -4,11 +4,11 @@
 /**********************************************************/
 
 #if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
-    #include "Client_Win.h" // Windows
+    #include "Windows\\Client_Win.h"
 #endif
 
 #ifdef linux
-    //*Nix
+    #include "Nix/Client_Nix.h"
 #endif
 
 #include "cpuid.h"
@@ -22,13 +22,14 @@ int main(int argc, char* argv[])
     conn_info* srv_info = NULL;
 
     srv_info = menu(argc, argv);
-    FAIL_IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, "main: Failed to get conn_info ptr from menu\n");
+    IF_JMP(NULL == srv_info, ERRORCODE_GENERIC, FAIL, "main: Failed to get conn_info ptr from menu\n");
 
     ret_val = build_cmd_socket(srv_info);
-    FAIL_IF_JMP(-1 == ret_val, ERRORCODE_GENERIC, "main: build_cmd_socket failed\n");
+    IF_JMP(-1 == ret_val, ERRORCODE_GENERIC, FAIL, "main: build_cmd_socket failed\n");
 
+    printf("\nGathering host information:\n");
     cpuid_flags = get_cpuid_flags();
-    printf("\nCPUID: %d\n", cpuid_flags);
+    printf("CPUID: %d\n", cpuid_flags);
     gethostname(hostname, 256);
     printf("Hostname: %s\n\n", hostname);
 

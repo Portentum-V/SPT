@@ -10,8 +10,9 @@
 #define ERRORCODE_FAILED	3
 #define ERRORCODE_ALLOCATE  4
 #define ERRORCODE_SOCKET    5
+#define ERRORCODE_INPUT     6
 
 extern unsigned int errorcode;
 
-#define FAIL_IF_JMP(condition, error, ...) if (condition) { errorcode = error; fprintf(stderr, __VA_ARGS__); goto FAIL; }
-#define FAIL_IF_RET(condition, ret, ...) if (condition) { fprintf(stderr, __VA_ARGS__); return retVal; }
+#define IF_JMP(condition, error, jump, ...) if (condition) { errorcode = error; fprintf(stderr, __VA_ARGS__); goto jump; }
+#define IF_RET(condition, error, retval, ...) if (condition) { errorcode = error; fprintf(stderr, __VA_ARGS__); return retval; }
