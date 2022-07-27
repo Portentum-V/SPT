@@ -198,11 +198,11 @@ int buffer_append(void **buffer,
     size_t need = *buffer_len + data_len;
     if (need > *buffer_size) {
         new_buffer = realloc(*buffer, need);
-        FAIL_IF_RET(NULL == new_buffer, -1, "Failed to realloc for buffer resize\n");
+        IF_RET(NULL == new_buffer, ERRORCODE_ALLOCATE, -1, "Failed to realloc for buffer resize\n");
         *buffer = new_buffer;
     }
     
-    memcpy(*buffer + *buffer_len, data, data_len);
+    memcpy((char*)buffer + *buffer_len, data, data_len);
     *buffer_len += data_len;
     return 0;
 }

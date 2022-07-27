@@ -15,6 +15,7 @@
 #include <netdb.h>
 
 #include "Client_Utilities.h"
+#include "Client_Nix.h"
 
 /* Constants */
 #define MAXADDRSIZE 40 

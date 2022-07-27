@@ -11,6 +11,7 @@
 #define ERRORCODE_ALLOCATE  4
 #define ERRORCODE_SOCKET    5
 #define ERRORCODE_INPUT     6
+#define ERRORCODE_ALLOCATE  7
 
 extern unsigned int errorcode;
 
