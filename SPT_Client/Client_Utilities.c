@@ -5,8 +5,6 @@
 
 #include "Client_Utilities.h"
 
-unsigned int errorcode = ERRORCODE_UNKNOWN;
-
 /* Validates Port, returns -1 if Invalid */
 //unsigned short check_port(char* input)
 int check_port(char* input)
@@ -34,7 +32,7 @@ conn_info * menu(int argc, char* argv[])
 
     conn_info* srv_info = malloc(sizeof(conn_info));
 
-    IF_JMP(argc < 3, ERRORCODE_INPUT, FAIL, "Usage:%s {ip} {port}\n", argv[0]);
+    IF_JMP(argc < 3, ERRORCODE_INPUT, FAIL, "\nUsage: %s {ip} {port}\n", argv[0]);
 
     str_addr = argv[1];
     str_port = argv[2];
@@ -57,7 +55,6 @@ conn_info * menu(int argc, char* argv[])
     srv_info = (struct conn_info *) malloc(sizeof(struct conn_info));
     IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, FAIL, "menu: conn_info malloc failed - NULL ptr");
 
-
     strcpy_s(srv_info->srv_addr, sizeof(srv_info->srv_addr), str_addr);
     strcpy_s(srv_info->srv_port, sizeof(srv_info->srv_port), str_port);
     srv_info->int_sock = int_sock;
@@ -68,17 +65,22 @@ conn_info * menu(int argc, char* argv[])
     srv_info->data_socket = -1;
     srv_info->shell_socket = -1;
 
-    goto SUCCESS;
 
-FAIL:
-    printf("Failed to launch SPT Client! ERRORCODE: %d\n", errorcode);
-    if (NULL != srv_info) 
-        free(srv_info);
-    return NULL;
-
-SUCCESS:
     printf("Launching SPT Client!\n");
     printf("Attempting to connect to %s:%d\n", str_addr, int_port);
+    ERRORCODE = ERRORCODE_SUCCESS;
+
+FAIL:
+    if (ERRORCODE != ERRORCODE_SUCCESS)
+    {
+        printf("Failed to launch SPT Client! ERRORCODE: %d\n", ERRORCODE);
+        if (NULL != srv_info)
+        {
+            free(srv_info);
+            srv_info = NULL;
+        }
+    }
+
     return srv_info;
 }
 

@@ -1,7 +1,5 @@
-/**********************************************************/
-/* Client.c                                               */
-/*														  */
-/**********************************************************/
+
+/* Client.c */
 
 #if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
     #include "Windows\\Client_Win.h"
@@ -13,6 +11,8 @@
 
 #include "cpuid.h"
 
+extern const char* ERRORSTR[];
+
 int main(int argc, char* argv[])
 {
     int ret_val = 0;
@@ -22,10 +22,10 @@ int main(int argc, char* argv[])
     conn_info* srv_info = NULL;
 
     srv_info = menu(argc, argv);
-    IF_JMP(NULL == srv_info, ERRORCODE_GENERIC, FAIL, "main: Failed to get conn_info ptr from menu\n");
+    IF_JMP(NULL == srv_info, ERRORCODE, DONE, "main: Failed to get conn_info ptr from menu\n");
 
     ret_val = build_cmd_socket(srv_info);
-    IF_JMP(-1 == ret_val, ERRORCODE_GENERIC, FAIL, "main: build_cmd_socket failed\n");
+    IF_JMP(-1 == ret_val, ERRORCODE_GENERIC, DONE, "main: build_cmd_socket failed\n");
 
     printf("\nGathering host information:\n");
     cpuid_flags = get_cpuid_flags();
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     } */
 
     /* Clean Exit */
-FAIL:
+DONE:
     if (NULL != srv_info) {
         if (-1 < srv_info->cmd_socket) {
             cleanup_socket(srv_info->cmd_socket);
@@ -59,6 +59,6 @@ FAIL:
         }
     }
     free(srv_info);
-    printf("Clean Exit\n");
+    printf("Clean Exit! Closed with errorcode: %s\n", ERRORSTR[ERRORCODE]);
     exit(ret_val);
 }

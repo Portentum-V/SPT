@@ -11,12 +11,12 @@
 #include <errno.h>
 
 #if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
-#include <winsock2.h>
-#include <ws2tcpip.h>              /* Provides getnameinfo for get_connection_information */
-#pragma comment(lib, "Ws2_32.lib") /* Provides ws2tcpip.h */
+    #include <winsock2.h>
+    #include <ws2tcpip.h>              /* Provides getnameinfo for get_connection_information */
+    #pragma comment(lib, "Ws2_32.lib") /* Provides ws2tcpip.h */
 #endif
 
-#include "Client_Error.h"
+#include "Error\Client_Error.h"
 
 /* Constants */
 #define MAXADDRSIZE 40 
