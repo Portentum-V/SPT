@@ -150,6 +150,8 @@ int get_connection_information(int socket_descriptor)
 }
 
 
+// This should be simplified to just push buffer, buffer_size out a socket and not add anything (that can be done in another function)
+
 /*  send_message
 * Send data via a socket, add session information followed by a message
 *
