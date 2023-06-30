@@ -1,0 +1,44 @@
+
+syntax = "proto3";
+
+import "nanopb.proto";
+
+// Size: 54 bytes
+message SPT_Route {
+	// Routing
+	uint32 priority		= 1 [(nanopb).int_size = IS_8];
+	uint32 hopcount		= 2 [(nanopb).int_size = IS_8];
+	bytes source		= 3 [(nanopb).max_size = 16, (nanopb).fixed_length = true];
+	bytes destination	= 4 [(nanopb).max_size = 16, (nanopb).fixed_length = true];
+	bytes ulid			= 5 [(nanopb).max_size = 16, (nanopb).fixed_length = true];
+
+	// Validate (excludes hopcount)
+	uint32 crc	= 6;
+}
+
+// Size: 32 + Payload
+message SPT_Task {
+
+	uint32 flags	= 1 [(nanopb).int_size = IS_16];
+	bytes ulid		= 2 [(nanopb).max_size = 16, (nanopb).fixed_length = true];
+
+	// RPC
+	uint32 module	= 3 [(nanopb).int_size = IS_16];
+	uint32 method	= 4 [(nanopb).int_size = IS_16];
+	uint32 status	= 5 [(nanopb).int_size = IS_16];
+
+	// If size > payload, expect more tasks with same id
+	uint64 size		= 6;
+	bytes payload	= 7; 
+}
+
+message SPT_Header {
+
+	// Protocol Version
+	uint32 version = 1 [(nanopb).int_size = IS_8];
+
+	SPT_Route route = 2;
+
+	// One message may contain multiple tasks
+	repeated SPT_Task task = 3;
+}

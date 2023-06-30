@@ -16,7 +16,7 @@
     #pragma comment(lib, "Ws2_32.lib") /* Provides ws2tcpip.h */
 #endif
 
-#include "Error\Client_Error.h"
+#include "..\\Error\\Node_Error.h"
 
 /* Constants */
 #define MAXADDRSIZE 40 
@@ -39,9 +39,9 @@
 /* Structs */
 typedef struct conn_info {
     /* Network information */
-    char srv_addr[MAXADDRSIZE];
-    char srv_port[6]; // Max port: 65535 (5 chars + Null = 6)
-    int int_sock;
+    char addr[MAXADDRSIZE];
+    char port[6]; // Max port: 65535 (5 chars + Null = 6)
+    int socket_type;
     /* Sockets */
     int cmd_socket;
     int data_socket;
@@ -51,8 +51,7 @@ typedef struct conn_info {
 
 } conn_info;
 
-/* Utility functions */
-int check_port(char* input);
+/* Functions */
 conn_info* menu(int argc, char* argv[]);
 
 int get_connection_information(int socket_descriptor);

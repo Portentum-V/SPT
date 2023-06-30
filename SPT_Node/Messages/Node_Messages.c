@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "Client_Messages.h"
+#include "Node_Messages.h"
 
 static bool write_callback(pb_ostream_t* stream, const uint8_t* buf, size_t count)
 {

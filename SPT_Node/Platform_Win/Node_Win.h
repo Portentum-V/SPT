@@ -1,21 +1,22 @@
 /***********************************************************/
-/* Client_Win.h                                            */
+/* Node_Win.h                                            */
 /***********************************************************/
 
 #pragma once
-/* Unique Headers */
+/* Threading */
+#include <windows.h> 
+/* Networking */
 #include <winsock2.h>
 #include <ws2tcpip.h>
 /* IP_ADAPTER_INFO && PIP_ADAPTER_INFO */
 #include <iphlpapi.h> 
 
-#include "..\\Client_Utilities.h"
+#include "..\\Utilities\\Node_Utilities.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 #pragma comment(lib, "IPHLPAPI.lib")
 
 
-/* One day this will have a .h file */
 int create_socket(char* srv_addr, char* srv_port, int int_sock, int conn_type);
 int cleanup_socket(int socket_descriptor);
 

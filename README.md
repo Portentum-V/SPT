@@ -58,6 +58,12 @@ This project will be an effort to build lightweight c programs that can provide 
 ### Windows
 - https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms740504(v=vs.85)
 
+
+## External Libraries
+- https://github.com/GerHobbelt/pthread-win32
+- https://github.com/skeeto/ulid-c/blob/master/ulid.c
+- https://github.com/rxi/log.c/tree/master
+
 ## Ideas
 #### System Design Interview - Alex Xu
  - Message queue (p22): Input services create messages which are published to a queue. Other services read the queue and perform actions defined by the messages

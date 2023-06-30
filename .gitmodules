@@ -1,6 +1,12 @@
 [submodule "nanopb"]
 	path = nanopb
 	url = https://github.com/nanopb/nanopb.git
-[submodule "log.c"]
-	path = log.c
+[submodule "SPT_Node/Platform_Win/pthread-win32"]
+	path = SPT_Node/Platform_Win/pthread-win32
+	url = git@github.com:GerHobbelt/pthread-win32.git
+[submodule "SPT_Node/Utilities/ulid-c"]
+	path = SPT_Node/Utilities/ulid-c
+	url = git@github.com:skeeto/ulid-c.git
+[submodule "SPT_Node/Error/log.c"]
+	path = SPT_Node/Error/log.c
 	url = git@github.com:rxi/log.c.git

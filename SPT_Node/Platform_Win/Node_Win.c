@@ -4,7 +4,7 @@
 /**********************************************************/
 
 #pragma once
-#include "Client_Win.h"
+#include "Node_Win.h"
 
 /*  build_cmd_socket
 * By the end of this function, should have a cmd_socket and session_uuid set in the conn_info struct
@@ -19,11 +19,11 @@ int build_cmd_socket(conn_info* srv_info)
     int ret_val = 0;
 
     char *buffer = malloc(BUFFER);
-    IF_JMP(buffer == NULL, ERRORCODE_ALLOCATE, FAIL, "Build_cmd_socket: buffer Malloc failed - NULL ptr\n");
+    JMP_IF(buffer == NULL, ERRORCODE_ALLOCATE, FAIL, "Build_cmd_socket: buffer Malloc failed - NULL ptr\n");
     memset(buffer, 0, BUFFER);
 
-    srv_info->cmd_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock, SOCK_CONN);
-    IF_JMP(srv_info->cmd_socket == -1, ERRORCODE_SOCKET, FAIL, "Build_cmd_socket: create_socket failed\n");
+    srv_info->cmd_socket = create_socket(srv_info->addr, srv_info->port, srv_info->socket_type, SOCK_CONN);
+    JMP_IF(srv_info->cmd_socket == -1, ERRORCODE_SOCKET, FAIL, "Build_cmd_socket: create_socket failed\n");
     //printf("cmd_socket successfully set: %d\n", srv_info->cmd_socket);
 
     /* Send empty session_uuid (0000) and recv actual session_uuid */
@@ -118,7 +118,7 @@ int build_data_socket(conn_info* srv_info)
     }
 
     // Eventually specify the addr:port/protocol to receive from?
-    srv_info->data_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock, 2);
+    srv_info->data_socket = create_socket(srv_info->addr, srv_info->port, srv_info->socket_type, 2);
     if (srv_info->data_socket == -1) {
         fprintf(stderr, "Build_cmd_socket: Failed to build data socket\n");
         ret_val = -1;
@@ -277,7 +277,7 @@ int get_mac_address(char * network_address)
         if (tmp == NULL) {
             fprintf(stderr, "Failed to malloc/realloc for GetAdaptersAddresses(), error: %d", ret_val);
             ret_val = -1;
-            goto exit;
+            goto EXIT;
         }
         ptr_addresses = tmp;
     }
@@ -316,13 +316,12 @@ int get_mac_address(char * network_address)
     else {
         fprintf(stderr, "GetAdapterAddresses failed, error: %d", ret_val);
         ret_val = -1;
-        goto exit;
+        goto EXIT;
     }
 
     ret_val = 0;
 
-FAIL:
-exit:
+EXIT:
     free(ptr_addresses);
     return ret_val;
 }
@@ -389,33 +388,33 @@ int recv_file(conn_info* srv_info, char *file_name, int file_size)
     if (recv_buffer == NULL) {
         fprintf(stderr, "recv_file: failed to malloc buffer");
         ret_val = -1;
-        goto exit;
+        goto EXIT;
     }
 
     ret_val = fopen_s(&new_file, file_name, "wb");
     if (new_file == NULL) {
         fprintf(stderr, "Failed to open file %s", file_name);
         ret_val = -1;
-        goto exit;
+        goto EXIT;
     }
 
-    srv_info->data_socket = create_socket(srv_info->srv_addr, srv_info->srv_port, srv_info->int_sock, 2);
+    srv_info->data_socket = create_socket(srv_info->addr, srv_info->port, srv_info->socket_type, 2);
     if (-1 == srv_info->data_socket) {
         printf("Failed to build socket for file download: %s", file_name);
         ret_val = -1;
-        goto exit;
+        goto EXIT;
     }
 
     // Send UUID and expected file?
     ret_val = send(srv_info->data_socket, srv_info->session_uuid, UUID_SIZE, 0);
     if (-1 == ret_val) {
         fprintf(stderr, "recv_file: UUID send() failed with error %d\n", ret_val);
-        goto exit;
+        goto EXIT;
     }
     ret_val = send(srv_info->data_socket, file_name, strlen(file_name) + 1, 0);
     if (-1 == ret_val) {
         fprintf(stderr, "recv_file: file_name send() failed with error %d\n", ret_val);
-        goto exit;
+        goto EXIT;
     }
 
     printf("Socket established and ACK for %s sent\n", file_name);
@@ -425,7 +424,7 @@ int recv_file(conn_info* srv_info, char *file_name, int file_size)
         if (-1 == bytes_recvd) {
             fprintf(stderr, "recv() failed with error %d\n", bytes_recvd);
             ret_val = -1;
-            goto exit;
+            goto EXIT;
         }
         else if (0 == bytes_recvd) {
             printf("Reached end of file\n");
@@ -433,8 +432,7 @@ int recv_file(conn_info* srv_info, char *file_name, int file_size)
         fwrite(recv_buffer, BUFFER, 1, new_file);
     }
 
-FAIL:
-exit:
+EXIT:
     if (new_file != NULL) {
         fclose(new_file);
     }

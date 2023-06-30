@@ -3,23 +3,13 @@
 /* Provides 'main' like functionaility to both Win and Nix */
 /***********************************************************/
 
-#include "Client_Utilities.h"
+#include "Node_Utilities.h"
+#include "Node_Validators.h"
 
-/* Validates Port, returns -1 if Invalid */
-//unsigned short check_port(char* input)
-int check_port(char* input)
-{
-    long port;
-    char* tmp_ptr;
-    port = strtol(input, &tmp_ptr, 10);
-    if (port >= 0 && port <= 65535) {
-        return (unsigned short)port;
-    }
-    else {
-        /* printf("Thats not really a vaild port... but I'll hook you up!\n"); */
-        return -1;
-    }
-}
+unsigned int ERRORCODE = ERRORCODE_UNKNOWN;
+
+// void (*client)(char*, unsigned short) 
+// Points to a function (client) that takes two arugments (a char* and an unsigned short)
 
 /* Takes user input and returns a struct of addr, port, protocol if successful otherwise NULL */
 conn_info * menu(int argc, char* argv[])
@@ -27,37 +17,37 @@ conn_info * menu(int argc, char* argv[])
     char* str_port;
     char* str_addr;
     char* str_sock;
-    int int_sock;
+    int socket_type;
     int int_port;
 
     conn_info* srv_info = malloc(sizeof(conn_info));
 
-    IF_JMP(argc < 3, ERRORCODE_INPUT, FAIL, "\nUsage: %s {ip} {port}\n", argv[0]);
+    JMP_IF(argc < 3, ERRORCODE_INPUT, FAIL, "Usage:%s {ip} {port}\n", argv[0]);
 
     str_addr = argv[1];
     str_port = argv[2];
-    int_sock = SOCK_STREAM;
+    socket_type = SOCK_STREAM;
 
-    IF_JMP(40 < sizeof(str_addr), ERRORCODE_INPUT, FAIL, "Invalid address: %s", str_addr);
-    IF_JMP(5 < sizeof(str_port), ERRORCODE_INPUT, FAIL, "Invlaid Port: %s", str_port);
+    JMP_IF(40 < sizeof(str_addr), ERRORCODE_INPUT, FAIL, "Invalid address: %s", str_addr);
+    JMP_IF(5 < sizeof(str_port), ERRORCODE_INPUT, FAIL, "Invlaid Port: %s", str_port);
 
-    int_port = check_port(str_port); // Once the basic checks are passed, actually verify the port
-    IF_JMP(-1 == int_port, ERRORCODE_INPUT, FAIL, "Invalid Port: %s", str_port);
+    int_port = validate_str_port(str_port); // Once the basic checks are passed, actually verify the port
+    JMP_IF(-1 == int_port, ERRORCODE_INPUT, FAIL, "Invalid Port: %s", str_port);
 
     if (argc == 4) {
         str_sock = argv[3];
         if (!strcmp("UDP", str_sock)) {
-            int_sock = SOCK_DGRAM;
+            socket_type = SOCK_DGRAM;
         }
     }
 
     // Malloc and assign values to the struct
     srv_info = (struct conn_info *) malloc(sizeof(struct conn_info));
-    IF_JMP(NULL == srv_info, ERRORCODE_ALLOCATE, FAIL, "menu: conn_info malloc failed - NULL ptr");
+    JMP_IF(NULL == srv_info, ERRORCODE_ALLOCATE, FAIL, "menu: conn_info malloc failed - NULL ptr");
 
-    strcpy_s(srv_info->srv_addr, sizeof(srv_info->srv_addr), str_addr);
-    strcpy_s(srv_info->srv_port, sizeof(srv_info->srv_port), str_port);
-    srv_info->int_sock = int_sock;
+    strcpy_s(srv_info->addr, sizeof(srv_info->addr), str_addr);
+    strcpy_s(srv_info->port, sizeof(srv_info->port), str_port);
+    srv_info->socket_type = socket_type;
     strcpy_s(srv_info->session_uuid, sizeof(srv_info->session_uuid), "000000000-0000-0000-0000-000000000000");
 
     // Set default stuffs
@@ -65,22 +55,17 @@ conn_info * menu(int argc, char* argv[])
     srv_info->data_socket = -1;
     srv_info->shell_socket = -1;
 
-
-    printf("Launching SPT Client!\n");
-    printf("Attempting to connect to %s:%d\n", str_addr, int_port);
-    ERRORCODE = ERRORCODE_SUCCESS;
+    goto SUCCESS;
 
 FAIL:
-    if (ERRORCODE != ERRORCODE_SUCCESS)
-    {
-        printf("Failed to launch SPT Client! ERRORCODE: %d\n", ERRORCODE);
-        if (NULL != srv_info)
-        {
-            free(srv_info);
-            srv_info = NULL;
-        }
-    }
+    printf("Failed to launch SPT Client! ERRORCODE: %d\n", ERRORCODE);
+    if (NULL != srv_info) 
+        free(srv_info);
+    return NULL;
 
+SUCCESS:
+    printf("Launching SPT Client!\n");
+    printf("Attempting to connect to %s:%d\n", str_addr, int_port);
     return srv_info;
 }
 
@@ -97,14 +82,11 @@ int get_connection_information(int socket_descriptor)
 {
     int ret_val = -1;
     uint32_t addr_len = 0;  //Alt for socklen_t without having to include network headers: unisgned opaque of at least 32 bits 
-    struct sockaddr_storage Addr;
+    struct sockaddr_storage Addr = {0};
     char remote_addr_str[MAXADDRSIZE];
     char remote_port_str[32];
     char local_addr_str[MAXADDRSIZE];
     char local_port_str[32];
-
-    int sock_type = -1;
-    unsigned int sock_type_len = sizeof(sock_type); // socklen_t ?
 
     addr_len = sizeof(Addr);
     if ((ret_val = getpeername(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
@@ -139,18 +121,13 @@ int get_connection_information(int socket_descriptor)
         */
     }
 
-    ret_val = getsockopt(socket_descriptor, SOL_SOCKET, SO_TYPE, &sock_type, &sock_type_len);
-
-    printf("local| %s:%s <-%s-> %s:%s |remote\n",
+    printf("local| %s:%s <---> %s:%s |remote\n",
         local_addr_str, local_port_str,
-        sock_type == SOCK_STREAM ? "TCP" : "UDP",
         remote_addr_str, remote_addr_str);
 
     return 0;
 }
 
-
-// This should be simplified to just push buffer, buffer_size out a socket and not add anything (that can be done in another function)
 
 /*  send_message
 * Send data via a socket, add session information followed by a message
@@ -193,21 +170,3 @@ char encrypt(char reddata) {
     blackdata = reddata;
     return blackdata;
 }
-
-int buffer_append(void **buffer,
-                  size_t *buffer_len, size_t *buffer_size,
-                  void *data, size_t data_len)
-{
-    void *new_buffer = NULL;
-    size_t need = *buffer_len + data_len;
-    if (need > *buffer_size) {
-        new_buffer = realloc(*buffer, need);
-        IF_RET(NULL == new_buffer, ERRORCODE_ALLOCATE, -1, "Failed to realloc for buffer resize\n");
-        *buffer = new_buffer;
-    }
-    
-    memcpy((char*)buffer + *buffer_len, data, data_len);
-    *buffer_len += data_len;
-    return 0;
-}
-        
