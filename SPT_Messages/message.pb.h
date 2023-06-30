@@ -3,37 +3,34 @@
 
 #ifndef PB_MESSAGE_PB_H_INCLUDED
 #define PB_MESSAGE_PB_H_INCLUDED
-#include "..\\nanopb\\pb.h"
+#include "..//nanopb//pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
 /* Struct definitions */
-/* Size: 46 bytes */
+/* Size: 54 bytes */
 typedef struct _SPT_Route {
     /* Routing */
     uint8_t priority;
     uint8_t hopcount;
     pb_byte_t source[16];
     pb_byte_t destination[16];
-    uint64_t session;
+    pb_byte_t ulid[16];
     /* Validate (excludes hopcount) */
     uint32_t crc;
 } SPT_Route;
 
-/* Size: 23 bytes (+ Payload) */
+/* Size: 32 + Payload */
 typedef struct _SPT_Task {
-    /* Request or Results */
-    bool type;
-    /* Task UUID: Reused if fragmented */
-    pb_byte_t id[16];
+    uint16_t flags;
+    pb_byte_t ulid[16];
     /* RPC */
     uint16_t module;
     uint16_t method;
     uint16_t status;
-    /* Payload
- If size is > payload, expect more messages with same id */
+    /* If size > payload, expect more tasks with same id */
     uint64_t size;
     pb_callback_t payload;
 } SPT_Task;
@@ -53,10 +50,10 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define SPT_Route_init_default                   {0, 0, {0}, {0}, 0, 0}
+#define SPT_Route_init_default                   {0, 0, {0}, {0}, {0}, 0}
 #define SPT_Task_init_default                    {0, {0}, 0, 0, 0, 0, {{NULL}, NULL}}
 #define SPT_Header_init_default                  {0, false, SPT_Route_init_default, {{NULL}, NULL}}
-#define SPT_Route_init_zero                      {0, 0, {0}, {0}, 0, 0}
+#define SPT_Route_init_zero                      {0, 0, {0}, {0}, {0}, 0}
 #define SPT_Task_init_zero                       {0, {0}, 0, 0, 0, 0, {{NULL}, NULL}}
 #define SPT_Header_init_zero                     {0, false, SPT_Route_init_zero, {{NULL}, NULL}}
 
@@ -65,10 +62,10 @@ extern "C" {
 #define SPT_Route_hopcount_tag                   2
 #define SPT_Route_source_tag                     3
 #define SPT_Route_destination_tag                4
-#define SPT_Route_session_tag                    5
+#define SPT_Route_ulid_tag                       5
 #define SPT_Route_crc_tag                        6
-#define SPT_Task_type_tag                        1
-#define SPT_Task_id_tag                          2
+#define SPT_Task_flags_tag                       1
+#define SPT_Task_ulid_tag                        2
 #define SPT_Task_module_tag                      3
 #define SPT_Task_method_tag                      4
 #define SPT_Task_status_tag                      5
@@ -84,14 +81,14 @@ X(a, STATIC,   SINGULAR, UINT32,   priority,          1) \
 X(a, STATIC,   SINGULAR, UINT32,   hopcount,          2) \
 X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, source,            3) \
 X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, destination,       4) \
-X(a, STATIC,   SINGULAR, UINT64,   session,           5) \
+X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, ulid,              5) \
 X(a, STATIC,   SINGULAR, UINT32,   crc,               6)
 #define SPT_Route_CALLBACK NULL
 #define SPT_Route_DEFAULT NULL
 
 #define SPT_Task_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, BOOL,     type,              1) \
-X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, id,                2) \
+X(a, STATIC,   SINGULAR, UINT32,   flags,             1) \
+X(a, STATIC,   SINGULAR, FIXED_LENGTH_BYTES, ulid,              2) \
 X(a, STATIC,   SINGULAR, UINT32,   module,            3) \
 X(a, STATIC,   SINGULAR, UINT32,   method,            4) \
 X(a, STATIC,   SINGULAR, UINT32,   status,            5) \
@@ -121,7 +118,7 @@ extern const pb_msgdesc_t SPT_Header_msg;
 /* Maximum encoded size of messages (where known) */
 /* SPT_Task_size depends on runtime parameters */
 /* SPT_Header_size depends on runtime parameters */
-#define SPT_Route_size                           59
+#define SPT_Route_size                           66
 
 #ifdef __cplusplus
 } /* extern "C" */

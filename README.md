@@ -8,7 +8,7 @@ This project will be an effort to build lightweight c programs that can provide 
  - [ ] Encoding / Serilization (nanopb: https://github.com/nanopb/nanopb)
  - [ ] Compression (fastLZ: https://github.com/ariya/FastLZ)
  - [ ] Encryption (SSL?)
- - [ ] Message format
+ - [X] Message format
 
 ### Windows Client
 - [ ] Network communication
@@ -60,6 +60,7 @@ This project will be an effort to build lightweight c programs that can provide 
 
 
 ## External Libraries
+- https://github.com/nanopb/nanopb.git
 - https://github.com/GerHobbelt/pthread-win32
 - https://github.com/skeeto/ulid-c/blob/master/ulid.c
 - https://github.com/rxi/log.c/tree/master
