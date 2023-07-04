@@ -1,22 +1,17 @@
-
-/***********************************************************/
-/* Node_Validators.c                                       */
-/* Provides 'main' like functionaility to both Win and Nix */
-/***********************************************************/
+/* Node_Validators.c */
 
 #include "Node_Validators.h"
 
-/* Validates Port, returns -1 if Invalid */
-//unsigned short check_port(char* input)
-int validate_str_port(char* input)
+
+uint16_t validate_port(uint16_t port)
 {
-    long port;
-    char* tmp_ptr;
-    port = strtol(input, &tmp_ptr, 10);
-    if (port >= 0 && port <= 65535) {
-        return (unsigned short)port;
+    return validate_range((uint32_t)port, 0, 65535);
+}
+
+uint16_t validate_range(uint32_t num, uint32_t min, uint32_t max)
+{
+    if (num >= min && num <= max) {
+        return ERRORCODE_SUCCESS;
     }
-    else {
-        return -1;
-    }
+    return ERRORCODE_INVALID;
 }

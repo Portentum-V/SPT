@@ -1,5 +1,5 @@
 [submodule "nanopb"]
-	path = nanopb
+	path = SPT_Messages/nanopb
 	url = https://github.com/nanopb/nanopb.git
 [submodule "SPT_Node/Platform_Win/pthread-win32"]
 	path = SPT_Node/Platform_Win/pthread-win32

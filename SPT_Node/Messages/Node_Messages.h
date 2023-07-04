@@ -3,10 +3,11 @@
 
 #pragma once
 
-#include "../../nanopb/pb.h"
-#include "../../nanopb/pb_common.h"
-#include "../../nanopb/pb_decode.h"
-#include "../../nanopb/pb_encode.h"
+#include "..\\..\\SPT_Messages\\message.pb.h"
+#include "../../SPT_Messages/nanopb/pb.h"
+#include "../../SPT_Messages/nanopb/pb_common.h"
+#include "../../SPT_Messages/nanopb/pb_decode.h"
+#include "../../SPT_Messages/nanopb/pb_encode.h"
 
 // Need Socket for MSG_WAITALL...
 #include "..\\Utilities\\Node_Utilities.h"

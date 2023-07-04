@@ -1,11 +1,6 @@
 #pragma once
 
-/* Builtins */
-#include <stdio.h>
-#include <stdlib.h>
-
-/* Project */
 #include "..\\Error\\Node_Error.h"
 
-/* Utility functions */
-int validate_str_port(char* input);
+uint16_t validate_range(uint32_t num, uint32_t min, uint32_t max);
+uint16_t validate_port(uint16_t port);
