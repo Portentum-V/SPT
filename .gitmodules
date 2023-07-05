@@ -10,3 +10,6 @@
 [submodule "SPT_Node/Error/log.c"]
 	path = SPT_Node/Error/log.c
 	url = git@github.com:rxi/log.c.git
+[submodule "SPT_Interface/Xolor"]
+	path = SPT_Interface/Xolor
+	url = git@github.com:Portentum-V/Xolor.git

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import cmd
 
-from Server_Utilities import Xolor, check_ip, check_port
-from Server_Manager import Manager
+from Interface_Utilities import Xolor, check_ip, check_port
+from Interface_Manager import Manager
 
 try:
     from pyreadline import Readline
@@ -15,7 +15,7 @@ class manager_CLI(cmd.Cmd, object):
     def __init__(self, manager):
         cmd.Cmd.__init__(self)
         self.manager = manager
-        self.prompt = '(mngr)$ '
+        self.prompt = Xolor.BOLD + '(~)$ ' + Xolor.END
 
     def do_exit(self, input_str):
         """Exits manager_CLI
@@ -37,7 +37,7 @@ class manager_CLI(cmd.Cmd, object):
             print("Closing manager...")
             self.manager.delete_all_sessions()
             print("Goodbye!")
-            return(1)
+            return(0)
         else:
             pass
     do_EOF = do_exit
@@ -80,8 +80,12 @@ class manager_CLI(cmd.Cmd, object):
         print("Connect to a remote socket")
 
     def do_session(self, input_str):
-        index = int(input_str.split()[0])
-        indexs = [ i[0] for i in self.manager.list_sessions() ]
+        try:
+            index = int(input_str.split()[0])
+            indexs = [ i[0] for i in self.manager.list_sessions() ]
+        except Exception as e:
+            print(Xolor.WARN + f"Invalid index: {input_str}\n{e}" + Xolor.END)
+            return
         if index not in indexs:
             print(Xolor.WARN + f"Invalid index: {index}" + Xolor.END)
             return
@@ -148,7 +152,7 @@ class session_CLI(cmd.Cmd, object):
         self.session.send_msg(input_str)
 
 def main():
-    print(Xolor.CYAN + "Starting STP Server" + Xolor.END)
+    print(Xolor.CYAN + "Starting STP Interface" + Xolor.END)
     manager = Manager()
     mgr_cli = manager_CLI(manager)
     try:

@@ -4,8 +4,8 @@ import threading
 
 import asyncio
 
-from Server_Log import info_log, error_log, log_function_response, log_function
-from Server_Utilities import Xolor, check_ip, check_port
+from Interface_Log import info_log, error_log, log_function_response, log_function
+from Interface_Utilities import Xolor, check_ip, check_port
 
 class Session(threading.Thread):
     def __init__(self, addr, port, session_type, session_index, logger):
@@ -134,7 +134,7 @@ class Session(threading.Thread):
         Args:
             addr: Remote (or local) IPv4/IPv6 address
             port: Remote (or local) port
-            session_type: Listen (0) or Connection (1)5
+            session_type: Listen (0) or Connection (1)
 
         Returns:
             None

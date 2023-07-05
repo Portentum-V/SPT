@@ -3,8 +3,8 @@ import threading
 import datetime
 import errno
 
-from Server_Log import SPTLog, log_function_response, log_function
-from Server_Session import Session
+from Interface_Log import SPTLog, log_function_response, log_function
+from Interface_Session import Session
 
 ## Documentation for a class
 #
