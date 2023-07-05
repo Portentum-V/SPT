@@ -50,6 +50,10 @@ This project will be an effort to build lightweight c programs that can provide 
 - https://docs.microsoft.com/en-us/windows/win32/api/iptypes/ns-iptypes-ip_adapter_addresses_lh
 - https://www.roguelynn.com/words/asyncio-initial-setup/
 
+### OS defs
+- https://web.archive.org/web/20191012035921/http://nadeausoftware.com/articles/2012/01/c_c_tip_how_use_compiler_predefined_macros_detect_operating_system
+- https://sourceforge.net/p/predef/wiki/OperatingSystems/
+
 ### VS stuff...
 - https://marketplace.visualstudio.com/items?itemName=MaciejGudanowicz.AddMultipleProjectsToSolution
 - https://docs.microsoft.com/en-us/visualstudio/ide/solutions-and-projects-in-visual-studio?view=vs-2019
