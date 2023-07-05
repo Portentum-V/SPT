@@ -1,7 +1,7 @@
 
 #include "Node_Config.h"
 
-unsigned char CONFIG[CONFIGSIZE] = {
+const unsigned char CONFIG[CONFIGSIZE] = {
 	86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, /* 16 */
 	86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, /* 32 */
 	86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 86, 

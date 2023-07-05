@@ -5,6 +5,32 @@
 
 #include "Node_Win.h"
 
+errorcode start_wsa(void)
+{
+    WSADATA wsaData;
+    int ret_val = WSAStartup(MAKEWORD(1, 1), &wsaData);
+
+    if (0 == ret_val) { 
+        return ERRORCODE_SUCCESS; 
+    }
+
+    log_warn("WSAStartup failed with error %d\n", errno);
+    WSACleanup();
+    return ERRORCODE_WSA;
+}
+
+void print_wsaerror(void)
+{
+    wchar_t* s = NULL;
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL, WSAGetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPWSTR)&s, 0, NULL);
+    fprintf(stderr, "%S\n", s);
+    LocalFree(s);
+}
+
+
 /* get_mac_address
 * Iterates over the available network adapaters and returns the MAC assocated with the address provided. AF_UNSPEC SAFE!!!
 * Alternatively, could probably use ARP
@@ -39,8 +65,14 @@ errorcode get_mac_address(char *network_address)
     out_buf_len = sizeof(IP_ADAPTER_ADDRESSES);
     ptr_addresses = (PIP_ADAPTER_ADDRESSES)malloc(out_buf_len); 
 
+    JMP_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, EXIT);
+
     /* Ensure ptr_addresses size is correct */
     if (GetAdaptersAddresses(family, flags, NULL, ptr_addresses, &out_buf_len) == ERROR_BUFFER_OVERFLOW) {
+        if (NULL != ptr_addresses) { 
+            free(ptr_addresses);
+            ptr_addresses = NULL;
+        }
         tmp = realloc(ptr_addresses, out_buf_len);
         if (NULL == tmp) {
             ret_val = ERRORCODE_ALLOCATE;
@@ -65,14 +97,13 @@ errorcode get_mac_address(char *network_address)
             }
             if (ptr_current_addresses->PhysicalAddressLength != 0) {
                 printf("\tPhysical: ");
-                for (i = 0; i < ptr_current_addresses->PhysicalAddressLength;
-                    i++) {
-                    if (i == (ptr_current_addresses->PhysicalAddressLength - 1))
-                        sprintf_s(two_bytes, 3, "%.2X\0",
-                            (int)ptr_current_addresses->PhysicalAddress[i]);
-                    else
-                        sprintf_s(two_bytes, 3, "%.2X",
-                            (int)ptr_current_addresses->PhysicalAddress[i]);
+                for (i = 0; i < ptr_current_addresses->PhysicalAddressLength; i++) {
+                    if (i == (ptr_current_addresses->PhysicalAddressLength - 1)) {
+                        sprintf_s(two_bytes, 3, "%.2X\0", (int)ptr_current_addresses->PhysicalAddress[i]);
+                    }
+                    else {
+                        sprintf_s(two_bytes, 3, "%.2X", (int)ptr_current_addresses->PhysicalAddress[i]);
+                    }
                     strncat_s(hw_str, HWADDRSIZE, two_bytes, 2);
                 }
                 printf("%s\n", hw_str);
@@ -87,18 +118,8 @@ errorcode get_mac_address(char *network_address)
     }
 
 EXIT:
-    free(ptr_addresses);
+    if (NULL != ptr_addresses) {
+        free(ptr_addresses);
+    }
     return ret_val;
-}
-
-
-void print_wsaerror() 
-{
-    wchar_t *s = NULL;
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 
-                   NULL, WSAGetLastError(),
-                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                   (LPWSTR)&s, 0, NULL);
-    fprintf(stderr, "%S\n", s);
-    LocalFree(s);
 }

@@ -6,13 +6,21 @@
 
 #include "..\\Utilities\\Node_Utilities.h"
 
-/* Threading */
-// #include <windows.h> /* MUST come after winsock2 (includes winsock?)*/
+/* Networking */
+#include <winsock2.h>
+#include <ws2tcpip.h>              /* Provides getnameinfo for get_connection_information */
+#pragma comment(lib, "Ws2_32.lib") /* Provides ws2tcpip.h */
 
 /* IP_ADAPTER_INFO && PIP_ADAPTER_INFO */
 #include <iphlpapi.h> 
 #pragma comment(lib, "IPHLPAPI.lib")
 
-errorcode get_mac_address(char *network_address);
+/* Threading */
+// #include <windows.h> /* MUST come after winsock2 (includes winsock?)*/
 
-void print_wsaerror();
+/* Functions */
+errorcode start_wsa(void);
+
+void print_wsaerror(void);
+
+errorcode get_mac_address(char *network_address);

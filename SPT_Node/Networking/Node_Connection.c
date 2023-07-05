@@ -8,12 +8,12 @@ conn_info* init_conn_struct(char* str_addr, char* str_port, int sock_type)
     conn_info* srv_info = NULL;
 
     // Valdiate input
-    JMP_IF(40 < sizeof(str_addr), ERRORCODE_INPUT, FAIL, "Invalid address: %s", str_addr);
-    JMP_IF(-1 == convert_port(str_port), ERRORCODE_INPUT, FAIL, "Invalid Port: %s", str_port);
+    JMP_PRINT_IF(40 < sizeof(str_addr), ERRORCODE_INPUT, FAIL, "Invalid address: %s", str_addr);
+    JMP_PRINT_IF(-1 == convert_port(str_port), ERRORCODE_INPUT, FAIL, "Invalid Port: %s", str_port);
     
     // Malloc and assign values to the struct
     srv_info = (struct conn_info*)malloc(sizeof(struct conn_info));
-    JMP_IF(NULL == srv_info, ERRORCODE_ALLOCATE, FAIL, "menu: conn_info malloc failed - NULL ptr");
+    JMP_PRINT_IF(NULL == srv_info, ERRORCODE_ALLOCATE, FAIL, "menu: conn_info malloc failed - NULL ptr");
 
     strcpy_s(srv_info->addr, sizeof(srv_info->addr), str_addr);
     strcpy_s(srv_info->port, sizeof(srv_info->port), str_port);
@@ -58,11 +58,11 @@ int build_cmd_socket(conn_info* srv_info)
     int ret_val = 0;
 
     char* buffer = malloc(BUFFER);
-    JMP_IF(buffer == NULL, ERRORCODE_ALLOCATE, FAIL, "Build_cmd_socket: buffer Malloc failed - NULL ptr\n");
+    JMP_PRINT_IF(buffer == NULL, ERRORCODE_ALLOCATE, FAIL, "Build_cmd_socket: buffer Malloc failed - NULL ptr\n");
     memset(buffer, 0, BUFFER);
 
     srv_info->socket_descriptor = create_socket(srv_info->addr, srv_info->port, srv_info->socket_type, SOCK_CONN);
-    JMP_IF(srv_info->socket_descriptor == -1, ERRORCODE_SOCKET, FAIL, "Build_cmd_socket: create_socket failed\n");
+    JMP_PRINT_IF(srv_info->socket_descriptor == -1, ERRORCODE_SOCKET, FAIL, "Build_cmd_socket: create_socket failed\n");
     //printf("cmd_socket successfully set: %d\n", srv_info->cmd_socket);
 
     /* Send empty session_uuid (0000) and recv actual session_uuid */
@@ -86,7 +86,9 @@ int build_cmd_socket(conn_info* srv_info)
     printf("Session UUID succesfully set: %s\n", srv_info->session_uuid);
 
 FAIL:
-    free(buffer);
+    if (NULL != buffer) {
+        free(buffer);
+    }
     return ret_val;
 }
 

@@ -17,8 +17,9 @@ const char* ERRORSTR[ERRORCOUNT] = {
 	"SOCKET"
 };
 
-errorcode init_error(int loglevel) {
+errorcode init_error(int loglevel, int folderdepth) {
 	log_set_level(loglevel);
+	log_set_depth(folderdepth);
 	example_log();
 	return ERRORCODE_SUCCESS;
 }

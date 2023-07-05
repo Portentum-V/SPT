@@ -3,6 +3,7 @@
 /***********************************************************/
 
 #pragma once
+
 /* Headers */
 #include <stddef.h>
 #include <stdio.h>
@@ -11,16 +12,13 @@
 #include <stdint.h>
 #include <errno.h>
 
-#if defined(_MSC_VER) && (defined(_WIN32) || defined(_WIN64))
-    #include <winsock2.h>
-    #include <ws2tcpip.h>              /* Provides getnameinfo for get_connection_information */
-    #pragma comment(lib, "Ws2_32.lib") /* Provides ws2tcpip.h */
-#endif
-
 #include "..\\Error\\Node_Error.h"
 
+#include "Node_OS.h"
 #include "Node_Converters.h"
 #include "Node_Validators.h"
+
+#include "cpuid.h"
 
 /* Constants */
 #define HWADDRSIZE 13
@@ -32,3 +30,5 @@
 
 /* Functions */
 void sleep_ms(int milliseconds);
+
+void get_hostinfo(void);

@@ -1,6 +1,13 @@
 
 #include "Node_Socket.h"
 
+const char* SOCKSTR[4] = {
+    "UNK",
+    "STREAM",
+    "DATAGRAM",
+    "RAW",
+};
+
 /* create_socket
 * Does the leg work to build a socket with some basic error handling
 *
@@ -13,7 +20,7 @@
 int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
 {
     // TODO: ifdef WINDOWS
-    WSADATA wsaData;
+
 
     /* Variables */
     int socket_descriptor = -1;
@@ -23,12 +30,9 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
     struct addrinfo hints, * addr_info, * AI;
     //struct socket socket_descriptor = INVALID_SOCKET; // incomplete type is not allowed?
 
-    // TODO: ifdef WINDOWS
-    if ((ret_val = WSAStartup(MAKEWORD(1, 1), &wsaData)) != 0) {
-        fprintf(stderr, "WSAStartup failed with error %d\n", errno);
-        WSACleanup();
-        return -1;
-    }
+#ifdef OS_WIN
+    RET_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, -1);
+#endif
 
     // Set the addrinfo struct to 0s
     memset(&hints, 0, sizeof(hints));
@@ -39,12 +43,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
 
     // Get address information
     ret_val = getaddrinfo(srv_addr, srv_port, &hints, &addr_info);
-    if (ret_val != 0) {
-        fprintf(stderr, "Cannot resolve address %s:%s, error %d\n", srv_addr, srv_port, ret_val);
-        // TODO: ifdef WINDOWS
-        WSACleanup();
-        return -1;
-    }
+    JMP_PRINT_IF(0 != ret_val, ERRORCODE_SOCKET, FAIL, "Cannot resolve address %s:%s, error %d\n", srv_addr, srv_port, ret_val);
 
     // The Arrow(->) operator exists to access the members of the structure or the unions using pointers.
     // getaddrinfo returns one or more addrinfo structs, try each until success
@@ -107,6 +106,12 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
     }
 
     return socket_descriptor;
+
+FAIL:
+#ifdef OS_WIN
+    WSACleanup();
+#endif
+    return -1;
 }
 
 /*  cleanup_socket
@@ -144,6 +149,12 @@ int get_connection_information(int socket_descriptor)
     char remote_port_str[32];
     char local_addr_str[MAXADDRSIZE];
     char local_port_str[32];
+    char sock_type = 0;
+    char* sock_str = NULL;
+
+#ifdef OS_WIN
+    RET_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, -1);
+#endif
 
     addr_len = sizeof(Addr);
     if ((ret_val = getpeername(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
@@ -155,12 +166,6 @@ int get_connection_information(int socket_descriptor)
             remote_addr_str, MAXADDRSIZE,
             remote_port_str, 32,
             NI_NUMERICHOST | NI_NUMERICSERV);
-        /*
-        printf("Connected to %s:%d via %s over %s\n",
-            remote_addr_str, ntohs(SS_PORT(&Addr)),
-            (AI->ai_socktype == SOCK_STREAM) ? "TCP" : "UDP",
-            (AI->ai_family == PF_INET) ? "PF_INET" : "PF_INET6");
-        */
     }
 
     if ((ret_val = getsockname(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
@@ -172,15 +177,20 @@ int get_connection_information(int socket_descriptor)
             local_addr_str, MAXADDRSIZE,
             local_port_str, 32,
             NI_NUMERICHOST | NI_NUMERICSERV);
-        /*
-        printf("Using local socket %s:%d\n",
-            local_addr_str, ntohs(SS_PORT(&Addr)));
-        */
     }
 
-    printf("local| %s:%s <---> %s:%s |remote\n",
-        local_addr_str, local_port_str,
-        remote_addr_str, remote_addr_str);
+    getsockopt(socket_descriptor, SOL_SOCKET, SO_TYPE, &sock_type, sizeof(sock_type));
+    if (1 > sock_type || 3 < sock_type) {
+        sock_str = SOCKSTR[0];
+    }
+    else {
+        sock_str = SOCKSTR[sock_type];
+    }
+
+    printf("local| %s:%s <-%s(%d)-> %s:%s |remote\n",
+           local_addr_str, local_port_str,
+           sock_str, sock_type,
+           remote_addr_str, remote_port_str);
 
     return 0;
 }

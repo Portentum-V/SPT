@@ -2,4 +2,4 @@
 
 #define CONFIGSIZE 512
 
-extern unsigned char CONFIG[CONFIGSIZE];
+extern const unsigned char CONFIG[CONFIGSIZE];
