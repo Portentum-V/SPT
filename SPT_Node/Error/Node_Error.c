@@ -14,7 +14,9 @@ const char* ERRORSTR[ERRORCOUNT] = {
 	"ALLOCATE",
 	"INPUT",
 	"NULL",
-	"SOCKET"
+	"WSA",
+	"SOCKET",
+	"REINIT"
 };
 
 errorcode init_error(int loglevel, int folderdepth) {

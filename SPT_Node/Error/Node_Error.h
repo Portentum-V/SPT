@@ -19,8 +19,9 @@
 #define ERRORCODE_NULL      7
 #define ERRORCODE_WSA       8
 #define ERRORCODE_SOCKET    9
+#define ERRORCODE_REINIT    10
 
-#define ERRORCOUNT 10
+#define ERRORCOUNT 11
 
 typedef uint16_t errorcode;
 extern errorcode g_error;

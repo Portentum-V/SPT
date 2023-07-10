@@ -18,6 +18,7 @@ int init(int level, int depth, char* str_port, char* str_addr, int sock_type, co
     int ret_val = ERRORCODE_UNKNOWN;
 
     ret_val = init_error(level, depth);
+    ret_val = init_ulid();
 
     log_debug("init_conn_struct");
     *srv_info = init_conn_struct(str_addr, str_port, sock_type);
@@ -48,7 +49,7 @@ uint16_t menu(int argc, char* argv[],
 
     printf("Arguments:\n");
     for (i; i < argc; ++i) {
-        printf("%s\n", argv[i]);
+        printf("[%d]: %s\n", i, argv[i]);
     }
 
     char** tmp_level = NULL;
@@ -71,7 +72,7 @@ uint16_t menu(int argc, char* argv[],
         }
     }
 
-    printf("Connecting to %s:%s|%d\n", *str_addr, *str_port, *sock_type);
+    printf("Connecting to %s:%s|%s\n", *str_addr, *str_port, SOCKSTR[*sock_type]);
     return ERRORCODE_SUCCESS;
 }
 

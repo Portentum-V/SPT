@@ -49,6 +49,7 @@ This project will be an effort to build lightweight c programs that can provide 
 - https://www.codeguru.com/cpp/i-n/network/networkinformation/article.php/c5451/Three-ways-to-get-your-MAC-address.htm
 - https://docs.microsoft.com/en-us/windows/win32/api/iptypes/ns-iptypes-ip_adapter_addresses_lh
 - https://www.roguelynn.com/words/asyncio-initial-setup/
+- https://blog.cloudflare.com/increasing-ipv6-mtu/
 
 ### OS defs
 - https://web.archive.org/web/20191012035921/http://nadeausoftware.com/articles/2012/01/c_c_tip_how_use_compiler_predefined_macros_detect_operating_system
@@ -79,3 +80,7 @@ This project will be an effort to build lightweight c programs that can provide 
 
 #### Designing Data-Intensive Applications
  - Maintainability (p19): Operability (keep the system running), Simplicity (remove as much complexity as possible), Evolvability (changing/adapting should be easy)
+
+## Asumptions 
+ - MTU of 1280: All non-local messages will be 1166 bytes max
+ - Minimum IPv6 MTU 1280 - Max TCP Header 60 - IPv6 Header 40 - Ethernet Header 14 = 1166

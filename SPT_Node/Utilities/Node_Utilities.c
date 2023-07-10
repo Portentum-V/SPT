@@ -5,10 +5,25 @@
 
 #include "Node_Utilities.h"
 
+struct ulid_generator* g_ulid_gen = NULL;
+
+int init_ulid(void)
+{
+    /* ulid generator already ready */
+    RET_IF(NULL != g_ulid_gen, ERRORCODE_REINIT, ERRORCODE_REINIT);
+
+    g_ulid_gen = calloc(1, sizeof(struct ulid_generator));
+    RET_IF(NULL == g_ulid_gen, ERRORCODE_ALLOCATE, ERRORCODE_ALLOCATE);
+
+    /* 1 = userspace entropy, 0 = system entropy */
+    return ulid_generator_init(g_ulid_gen, ULID_RELAXED);
+}
+
 void sleep_ms(int milliseconds)
 {
 #ifdef OS_WIN
     Sleep(milliseconds);
+    // TODO: Move POSIX check to Node_OS?
 #elif _POSIX_C_SOURCE >= 199309L
     struct timespec ts;
     ts.tv_sec = milliseconds / 1000;
@@ -18,8 +33,6 @@ void sleep_ms(int milliseconds)
     usleep(milliseconds * 1000);
 #endif
 }
-// void (*client)(char*, unsigned short) 
-// Points to a function (client) that takes two arugments (a char* and an unsigned short)
 
 void get_hostinfo(void)
 {

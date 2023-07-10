@@ -24,3 +24,6 @@ typedef struct conn_info {
     char session_uuid[UUID_SIZE];
 
 } conn_info;
+
+/* TODO: #IF DEBUG */
+extern const char* SOCKSTR[4];

@@ -16,7 +16,7 @@ message SPT_Route {
 	uint32 crc	= 6;
 }
 
-// Size: 32 + Payload
+// Size: 32 + Payload (Max 1056)
 message SPT_Task {
 
 	uint32 flags	= 1 [(nanopb).int_size = IS_16];
@@ -29,9 +29,10 @@ message SPT_Task {
 
 	// If size > payload, expect more tasks with same id
 	uint64 size		= 6;
-	bytes payload	= 7; 
+	bytes payload	= 7 [(nanopb).max_size = 1024]; 
 }
 
+// Size: 1 + 66 + 1056 = 1123
 message SPT_Header {
 
 	// Protocol Version
@@ -39,6 +40,6 @@ message SPT_Header {
 
 	SPT_Route route = 2;
 
-	// One message may contain multiple tasks
+	// One message may contain multiple tasks, upto 1100 bytes total
 	repeated SPT_Task task = 3;
 }

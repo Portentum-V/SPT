@@ -1,13 +1,6 @@
 
 #include "Node_Socket.h"
 
-const char* SOCKSTR[4] = {
-    "UNK",
-    "STREAM",
-    "DATAGRAM",
-    "RAW",
-};
-
 /* create_socket
 * Does the leg work to build a socket with some basic error handling
 *
@@ -67,7 +60,9 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
         // Establish connection to server (sets up remote mapping if DGRAM)
         // printf("Attempting to connect to %s:%s\n", srv_addr, srv_port);
 
-        if (SOCK_CONN == conn_type && SOCK_DGRAM != sock_type) {
+        /* Connecting is vaild for DGRAMs */
+        // if (SOCK_CONN == conn_type && SOCK_DGRAM != sock_type) {
+        if (SOCK_CONN == conn_type) {
             // If the connection fails, try the next addrinfo struct otherwise break
             if ((ret_val = connect(socket_descriptor, AI->ai_addr, AI->ai_addrlen)) < 0) {
                 fprintf(stderr, "Connect() failed, error %d\n", ret_val);
@@ -87,15 +82,11 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
     }
     /* MAKE THIS A FUNCTION END? */
 
-    // Attempted all the addrinfo structs but made no valid connections
-    if (AI == NULL) {
-        fprintf(stderr, "Fatal: unable to connect to server.\n");
-        WSACleanup();
-        return -1;
-    }
-
     // Finished with addrinfo chain
     freeaddrinfo(addr_info);
+
+    // Attempted all the addrinfo structs but made no valid connections
+    JMP_PRINT_IF(NULL == AI, ERRORCODE_SOCKET, FAIL, "Fatal: unable to create socket.\n");
 
     printf("Valid socket created: %d\n", socket_descriptor);
 
@@ -110,6 +101,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
 FAIL:
 #ifdef OS_WIN
     WSACleanup();
+    print_wsaerror();
 #endif
     return -1;
 }
@@ -179,6 +171,7 @@ int get_connection_information(int socket_descriptor)
             NI_NUMERICHOST | NI_NUMERICSERV);
     }
 
+    /* TODO: Not getting the socket type? */
     getsockopt(socket_descriptor, SOL_SOCKET, SO_TYPE, &sock_type, sizeof(sock_type));
     if (1 > sock_type || 3 < sock_type) {
         sock_str = SOCKSTR[0];

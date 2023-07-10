@@ -1,8 +1,6 @@
 
 #include "Node_Connection.h"
 
-/* Takes user input and returns a struct of addr, port, protocol if successful otherwise NULL */
-// conn_info * menu(int argc, char* argv[])
 conn_info* init_conn_struct(char* str_addr, char* str_port, int sock_type)
 {
     conn_info* srv_info = NULL;
