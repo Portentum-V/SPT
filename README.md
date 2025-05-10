@@ -71,6 +71,12 @@ This project will be an effort to build lightweight c programs that can provide 
 - https://github.com/rxi/log.c/tree/master
 
 ## Ideas
+
+#### Other
+ - Design for disassembly & descent: https://permacomputing.net/Design_for_disassembly/ & https://permacomputing.net/design_for_descent/
+
+
+
 #### System Design Interview - Alex Xu
  - Message queue (p22): Input services create messages which are published to a queue. Other services read the queue and perform actions defined by the messages
  - Metrics (p23): understand the health of the system [CPU, Memory, I/O, etc]

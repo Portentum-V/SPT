@@ -19,9 +19,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
     int socket_descriptor = -1;
     int ret_val = -1;
     const char sockopt = 1;
-
-    struct addrinfo hints, * addr_info, * AI;
-    //struct socket socket_descriptor = INVALID_SOCKET; // incomplete type is not allowed?
+    struct addrinfo hints, *addr_info, *AI;
 
 #ifdef OS_WIN
     RET_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, -1);
@@ -29,16 +27,15 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
 
     // Set the addrinfo struct to 0s
     memset(&hints, 0, sizeof(hints));
-    hints.ai_flags = AI_NUMERICSERV; // Will not resolve server name
+    hints.ai_flags = AI_NUMERICSERV;  // Will not resolve server name
     hints.ai_flags |= AI_NUMERICHOST; // Will not resolve host name
     hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = sock_type;      // 1: STREAM, 2: DGRAM, 3: RAW
+    hints.ai_socktype = sock_type;    // 1: STREAM, 2: DGRAM, 3: RAW
 
     // Get address information
     ret_val = getaddrinfo(srv_addr, srv_port, &hints, &addr_info);
     JMP_PRINT_IF(0 != ret_val, ERRORCODE_SOCKET, FAIL, "Cannot resolve address %s:%s, error %d\n", srv_addr, srv_port, ret_val);
 
-    // The Arrow(->) operator exists to access the members of the structure or the unions using pointers.
     // getaddrinfo returns one or more addrinfo structs, try each until success
     for (AI = addr_info; AI != NULL; AI = AI->ai_next) {
 
@@ -57,11 +54,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
             }
         }
 
-        // Establish connection to server (sets up remote mapping if DGRAM)
-        // printf("Attempting to connect to %s:%s\n", srv_addr, srv_port);
-
         /* Connecting is vaild for DGRAMs */
-        // if (SOCK_CONN == conn_type && SOCK_DGRAM != sock_type) {
         if (SOCK_CONN == conn_type) {
             // If the connection fails, try the next addrinfo struct otherwise break
             if ((ret_val = connect(socket_descriptor, AI->ai_addr, AI->ai_addrlen)) < 0) {
@@ -117,9 +110,10 @@ int cleanup_socket(int socket_descriptor)
 {
     shutdown(socket_descriptor, SD_SEND);
     closesocket(socket_descriptor);
-    //TODO #ifdef WIN
+#ifdef OS_WIN
     WSACleanup();
-    printf("Cleaned up Socket\n");
+#endif
+    printf("Cleaned up Socket %d\n", socket_descriptor);
     return 0;
 }
 

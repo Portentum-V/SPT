@@ -36,8 +36,8 @@ DONE:
 }
 
 uint16_t menu(int argc, char* argv[], 
-         int* level, int* depth,
-         char**  str_port, char**  str_addr, int* sock_type)
+              int* level, int* depth,
+              char**  str_port, char**  str_addr, int* sock_type)
 {
     char* str_sock;
     int i = 0;
