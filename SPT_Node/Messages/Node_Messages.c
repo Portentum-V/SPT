@@ -1,8 +1,6 @@
 
 /* Client_Messages.c - Nano Protocol Buffers*/
 
-#pragma once
-
 #include "Node_Messages.h"
 
 static bool write_callback(pb_ostream_t* stream, const uint8_t* buf, size_t count)
@@ -46,15 +44,15 @@ SPT_Route * init_route_header(uint8_t priority, uint8_t hopcount,
     errorcode error = ERRORCODE_UNKNOWN;
     SPT_Route * route;
     route = (SPT_Route *)calloc(1, sizeof(SPT_Route));
-    RET_IF(NULL == route, ERRORCODE_ALLOCATE, NULL);
+    RET_IF(NULL == route, ERRORCODE_ALLOCATE, NULL)
 
     route->priority = priority;
     route->hopcount = hopcount;
 
     memcpy(route->source, source, ID_SIZE);
-    JMP_IF(NULL == route->source, ERRORCODE_ALLOCATE, DONE);
+    JMP_IF(NULL == route->source, ERRORCODE_ALLOCATE, DONE)
     memcpy(route->destination, destination, ID_SIZE);
-    JMP_IF(NULL == route->destination, ERRORCODE_ALLOCATE, DONE);
+    JMP_IF(NULL == route->destination, ERRORCODE_ALLOCATE, DONE)
 
     unsigned char* ulid = ulid_generate_binary(g_ulid_gen);
     memcpy(route->ulid, ulid, ID_SIZE);

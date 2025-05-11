@@ -20,6 +20,7 @@ const char* ERRORSTR[ERRORCOUNT] = {
 };
 
 errorcode init_error(int loglevel, int folderdepth) {
+	log_trace("Log level: %d; folder depth: %d\n", loglevel, folderdepth);
 	log_set_level(loglevel);
 	log_set_depth(folderdepth);
 	example_log();

@@ -32,10 +32,10 @@ extern bool g_loop;
 
 #define NUMARGS(...) sizeof(int[]){__VA_ARGS__}) / sizeof(int)
 
-#define JMP_PRINT_IF(con, err, jmp, str, ...) do { if (con) { g_error = err; fprintf(stderr, str, ##__VA_ARGS__); goto jmp; } } while(0);
+#define JMP_PRINT_IF(con, err, jmp, str, ...) do { if (con) { g_error = err; log_log(LOG_ERROR, __FILE__, __LINE__, str, ##__VA_ARGS__); goto jmp; } } while(0);
 #define JMP_IF(con, err, jmp) do { if (con) { g_error = err; goto jmp; } } while(0);
 
-#define RET_PRINT_IF(con, err, ret, str, ...) do { if (con) {  g_error = err; fprintf(stderr, str, ##__VA_ARGS__); return ret; } } while(0);
+#define RET_PRINT_IF(con, err, ret, str, ...) do { if (con) {  g_error = err; log_log(LOG_ERROR, __FILE__, __LINE__, str, ##__VA_ARGS__); return ret; } } while(0);
 #define RET_IF(con, err, ret) do { if (con) {  g_error = err; return ret; } } while(0);
 
 errorcode example_log(void);

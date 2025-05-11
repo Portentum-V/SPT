@@ -1,19 +1,21 @@
 
 /* Node.c */
 
-#include "Utilities\\Node_Utilities.h"
-#include "Networking\\Node_Networking.h"
-#include "Configuration\\Node_Config.h"
+#include "Utilities/Node_Utilities.h"
+#include "Networking/Node_Networking.h"
+#include "Networking/Node_Connection.h"
+#include "Configuration/Node_Config.h"
 
 extern const char* ERRORSTR[];
 
-int deinit(conn_info* srv_info)
+int static deinit(conn_info* srv_info)
 {
-    deinit_conn_struct(srv_info);
+    // deinit_conn_struct(srv_info);
+	g_error = ERRORCODE_SUCCESS;
     return 0;
 }
 
-int init(int level, int depth, char* str_port, char* str_addr, int sock_type, conn_info** srv_info)
+int static init(int level, int depth, char* str_port, char* str_addr, int sock_type, conn_info** srv_info)
 {
     int ret_val = ERRORCODE_UNKNOWN;
 
@@ -35,21 +37,21 @@ DONE:
     return ret_val;
 }
 
-uint16_t menu(int argc, char* argv[], 
+uint16_t static menu(int argc, char* argv[], 
               int* level, int* depth,
               char**  str_port, char**  str_addr, int* sock_type)
 {
     char* str_sock;
     int i = 0;
 
-    printf("argc: %d\n", argc);
+    log_trace("argc: %d\n", argc);
 
     RET_PRINT_IF(argc < 5, ERRORCODE_INPUT, ERRORCODE_INPUT, 
            "Usage:%s {loglevel} {folderdepth} {ip} {port} {[UDP]}\n", argv[0]);
 
-    printf("Arguments:\n");
+    // T0DO if debug?
     for (i; i < argc; ++i) {
-        printf("[%d]: %s\n", i, argv[i]);
+        log_trace("[%d]: %s\n", i, argv[i]);
     }
 
     char** tmp_level = NULL;
@@ -72,13 +74,13 @@ uint16_t menu(int argc, char* argv[],
         }
     }
 
-    printf("Connecting to %s:%s|%s\n", *str_addr, *str_port, SOCKSTR[*sock_type]);
+    log_info("Connecting to %s:%s|%s\n", *str_addr, *str_port, SOCKSTR[*sock_type]);
     return ERRORCODE_SUCCESS;
 }
 
 void execute(void)
 {
-    printf("A thread eventually...\n");
+    log_debug("A thread eventually...\n");
     sleep_ms(1000);
     g_loop = false;
     return;
@@ -86,7 +88,6 @@ void execute(void)
 
 int main(int argc, char* argv[])
 {
-    printf("Test!\n");
     int ret_val = 0;
     conn_info* srv_info = NULL;
 
@@ -99,12 +100,12 @@ int main(int argc, char* argv[])
     ret_val = menu(argc, argv,
                    &level, &depth,
                    &str_port, &str_addr, &sock_type);
-    JMP_PRINT_IF(ERRORCODE_SUCCESS != ret_val, ret_val, DONE, "Failed to init\n");
+    JMP_PRINT_IF(ERRORCODE_SUCCESS != ret_val, ret_val, DONE, "Failed to init\n")
 
     ret_val = init(level, depth, str_port, str_addr, sock_type, &srv_info);
-    JMP_PRINT_IF(ERRORCODE_SUCCESS != ret_val, ret_val, DONE, "Failed to init\n");
+    JMP_PRINT_IF(ERRORCODE_SUCCESS != ret_val, ret_val, DONE, "Failed to init\n")
 
-    printf("Launching SPT Node!\n");
+    log_info("Launching SPT Node!\n");
 
     get_hostinfo(); /* Some sort of 'startup' function to call back? */
     while (g_loop)
@@ -115,6 +116,6 @@ int main(int argc, char* argv[])
     /* Clean Exit */
 DONE:
     ret_val = deinit(srv_info);
-    printf("Clean Exit! Closed with errorcode: %s\n", ERRORSTR[g_error]);
+    log_info("Clean Exit! Closed with errorcode: %s\n", ERRORSTR[g_error]);
     exit(ret_val);
 }

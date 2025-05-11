@@ -22,11 +22,16 @@ errorcode start_wsa(void)
 void print_wsaerror(void)
 {
     wchar_t* s = NULL;
+    long dwMessageId = WSAGetLastError();
+	if (0 == dwMessageId) {
+		return;
+	}
+
     FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, WSAGetLastError(),
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPWSTR)&s, 0, NULL);
-    fprintf(stderr, "%S\n", s);
+                   NULL, dwMessageId,
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   (LPWSTR)&s, 0, NULL);
+    log_error("Id %ld; Message: %S\n", dwMessageId, s);
     LocalFree(s);
 }
 
@@ -76,13 +81,13 @@ errorcode get_mac_address(char *network_address)
         tmp = realloc(ptr_addresses, out_buf_len);
         if (NULL == tmp) {
             ret_val = ERRORCODE_ALLOCATE;
-            fprintf(stderr, "Failed to malloc/realloc for GetAdaptersAddresses(), error: %lu", ERROR_BUFFER_OVERFLOW);
+            log_error("Failed to malloc/realloc for GetAdaptersAddresses(), error: %lu", ERROR_BUFFER_OVERFLOW);
             goto EXIT;
         }
         ptr_addresses = tmp;
     }
 
-    printf("Memory allocated for GetAdapterAddresses = %d bytes\n", out_buf_len);
+    log_trace("Memory allocated for GetAdapterAddresses = %ld bytes\n", out_buf_len);
     /* Actually call GetAdaptersAddresses for data */
     ret_val = GetAdaptersAddresses(family, flags, NULL, ptr_addresses, &out_buf_len);
     if (NO_ERROR == ret_val) { /* NO_ERROR == 0 */
@@ -113,7 +118,7 @@ errorcode get_mac_address(char *network_address)
         }
     }
     else {
-        fprintf(stderr, "GetAdapterAddresses failed, error: %d", ret_val);
+        log_error("GetAdapterAddresses failed, error: %d", ret_val);
         ret_val = ERRORCODE_FAILED;
     }
 

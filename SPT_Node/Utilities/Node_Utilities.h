@@ -13,11 +13,11 @@
 #include <errno.h>
 
 /* External Headers */
-#include "ulid-c\\ulid.h"
+#include "ulid-c/ulid.h"
 #include "cpuid.h"
 
 /* SPT Headers */
-#include "..\\Error\\Node_Error.h"
+#include "../Error/Node_Error.h"
 
 #include "Node_OS.h"
 #include "Node_Converters.h"

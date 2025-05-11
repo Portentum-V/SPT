@@ -22,7 +22,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
     struct addrinfo hints, *addr_info, *AI;
 
 #ifdef OS_WIN
-    RET_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, -1);
+    RET_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, -1)
 #endif
 
     // Set the addrinfo struct to 0s
@@ -34,22 +34,22 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
 
     // Get address information
     ret_val = getaddrinfo(srv_addr, srv_port, &hints, &addr_info);
-    JMP_PRINT_IF(0 != ret_val, ERRORCODE_SOCKET, FAIL, "Cannot resolve address %s:%s, error %d\n", srv_addr, srv_port, ret_val);
+    JMP_PRINT_IF(0 != ret_val, ERRORCODE_SOCKET, FAIL, "Cannot resolve address %s:%s, error %d\n", srv_addr, srv_port, ret_val)
 
     // getaddrinfo returns one or more addrinfo structs, try each until success
     for (AI = addr_info; AI != NULL; AI = AI->ai_next) {
 
         // Open socket
         if ((socket_descriptor = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0) {
-            fprintf(stderr, "Building socket descriptor with socket() failed, error %d\n", errno);
+            log_error("Building socket descriptor with socket() failed, error %d\n", errno);
         }
 
-        printf("Successful socket call > family: %d | socktype: %d | protocol: %d\n", AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        log_trace("Successful socket call > family: %d | socktype: %d | protocol: %d\n", AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
         if (SOCK_BIND == conn_type) {
             ret_val = setsockopt(socket_descriptor, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt));
             if (-1 == ret_val) {
-                fprintf(stderr, "Setting SO_REUSEADDR failed, error: %d", errno);
+                log_error("Setting SO_REUSEADDR failed, error: %d", errno);
                 continue;
             }
         }
@@ -58,7 +58,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
         if (SOCK_CONN == conn_type) {
             // If the connection fails, try the next addrinfo struct otherwise break
             if ((ret_val = connect(socket_descriptor, AI->ai_addr, AI->ai_addrlen)) < 0) {
-                fprintf(stderr, "Connect() failed, error %d\n", ret_val);
+                log_error("Connect() failed, error %d\n", ret_val);
                 closesocket(socket_descriptor);
             }
             else break;
@@ -67,7 +67,7 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
         else if (SOCK_BIND == conn_type) {
             ret_val = bind(socket_descriptor, AI->ai_addr, AI->ai_addrlen);
             if (0 != ret_val) {
-                fprintf(stderr, "Connect() failed, error: %d\n", errno);
+                log_error("Connect() failed, error: %d\n", errno);
                 closesocket(socket_descriptor);
             }
             else break;
@@ -79,9 +79,9 @@ int create_socket(char* srv_addr, char* srv_port, int sock_type, int conn_type)
     freeaddrinfo(addr_info);
 
     // Attempted all the addrinfo structs but made no valid connections
-    JMP_PRINT_IF(NULL == AI, ERRORCODE_SOCKET, FAIL, "Fatal: unable to create socket.\n");
+    JMP_PRINT_IF(NULL == AI, ERRORCODE_SOCKET, FAIL, "Fatal: unable to create socket.\n")
 
-    printf("Valid socket created: %d\n", socket_descriptor);
+    log_trace("Valid socket created: %d\n", socket_descriptor);
 
     ret_val = get_connection_information(socket_descriptor);
     if (ret_val < 0) {
@@ -113,7 +113,7 @@ int cleanup_socket(int socket_descriptor)
 #ifdef OS_WIN
     WSACleanup();
 #endif
-    printf("Cleaned up Socket %d\n", socket_descriptor);
+    log_trace("Cleaned up Socket %d\n", socket_descriptor);
     return 0;
 }
 
@@ -129,44 +129,46 @@ int cleanup_socket(int socket_descriptor)
 int get_connection_information(int socket_descriptor)
 {
     int ret_val = -1;
-    uint32_t addr_len = 0;  //Alt for socklen_t without having to include network headers: unisgned opaque of at least 32 bits 
+    uint32_t addr_len = 0;  //Alt for socklen_t without having to include network headers: unsigned opaque of at least 32 bits 
     struct sockaddr_storage Addr = { 0 };
     char remote_addr_str[MAXADDRSIZE];
     char remote_port_str[32];
     char local_addr_str[MAXADDRSIZE];
     char local_port_str[32];
     char sock_type = 0;
+    int sock_type_len = 0;
     char* sock_str = NULL;
 
 #ifdef OS_WIN
-    RET_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, -1);
+    RET_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, -1)
 #endif
 
     addr_len = sizeof(Addr);
     if ((ret_val = getpeername(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
-        fprintf(stderr, "getpeername() failed, error %d\n", ret_val);
+        log_error("getpeername() failed, error %d\n", ret_val);
         return -1;
     }
     else {
         getnameinfo((struct sockaddr*)&Addr, addr_len,
-            remote_addr_str, MAXADDRSIZE,
-            remote_port_str, 32,
-            NI_NUMERICHOST | NI_NUMERICSERV);
+                    remote_addr_str, MAXADDRSIZE,
+                    remote_port_str, 32,
+                    NI_NUMERICHOST | NI_NUMERICSERV);
     }
 
     if ((ret_val = getsockname(socket_descriptor, (struct sockaddr*)&Addr, &addr_len)) < 0) {
-        fprintf(stderr, "getsockname() failed with error %d\n", ret_val);
+        log_error("getsockname() failed with error %d\n", ret_val);
         return -1;
     }
     else {
         getnameinfo((struct sockaddr*)&Addr, addr_len,
-            local_addr_str, MAXADDRSIZE,
-            local_port_str, 32,
-            NI_NUMERICHOST | NI_NUMERICSERV);
+                    local_addr_str, MAXADDRSIZE,
+                    local_port_str, 32,
+                    NI_NUMERICHOST | NI_NUMERICSERV);
     }
 
     /* TODO: Not getting the socket type? */
-    getsockopt(socket_descriptor, SOL_SOCKET, SO_TYPE, &sock_type, sizeof(sock_type));
+    sock_type_len = sizeof(sock_type);
+    getsockopt(socket_descriptor, SOL_SOCKET, SO_TYPE, &sock_type, &sock_type_len);
     if (1 > sock_type || 3 < sock_type) {
         sock_str = SOCKSTR[0];
     }
@@ -174,7 +176,7 @@ int get_connection_information(int socket_descriptor)
         sock_str = SOCKSTR[sock_type];
     }
 
-    printf("local| %s:%s <-%s(%d)-> %s:%s |remote\n",
+    log_info("local| %s:%s <-%s(%d)-> %s:%s |remote\n",
            local_addr_str, local_port_str,
            sock_str, sock_type,
            remote_addr_str, remote_port_str);
@@ -188,7 +190,7 @@ int echo_recv(int socket_descriptor)
     int ret_val = 0;
     char* buffer = malloc(10);
     if (buffer == NULL) {
-        fprintf(stderr, "Malloc failed");
+        log_error("Malloc failed");
         ret_val = -1;
         goto DONE;
     }
@@ -196,19 +198,19 @@ int echo_recv(int socket_descriptor)
 
     ret_val = recv(socket_descriptor, buffer, 10, 0);
     if (-1 == ret_val) {
-        fprintf(stderr, "recv() failed with error %d\n", ret_val);
+        log_error("recv() failed with error %d\n", ret_val);
         goto DONE;
     }
 
-    printf("\nRecv: %s\n", buffer);
+    log_trace("\nRecv: %s\n", buffer);
 
     ret_val = send(socket_descriptor, buffer, 10, 0);
     if (-1 == ret_val) {
-        fprintf(stderr, "send() failed with error %d\n", ret_val);
+        log_error("send() failed with error %d\n", ret_val);
         goto DONE;
     }
 
-    printf("Sent: %s\n", buffer);
+    log_trace("Sent: %s\n", buffer);
 
 DONE:
     return ret_val;

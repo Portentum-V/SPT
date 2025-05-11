@@ -39,8 +39,8 @@ void deinit_conn_struct(conn_info* srv_info)
         }
         free(srv_info);
         g_error = ERRORCODE_SUCCESS;
-    }
-    g_error = ERRORCODE_NULL;
+	}
+    else { g_error = ERRORCODE_NULL; }
 }
 
 /*  build_cmd_socket
@@ -66,14 +66,14 @@ int build_cmd_socket(conn_info* srv_info)
     /* Send empty session_uuid (0000) and recv actual session_uuid */
     // Here is 'message' should be encoded, compressed, encrypted before being sent
     ret_val = send_message(srv_info, srv_info->socket_descriptor, "init", 5); //Playing with struct like [ UUID CMMD SIZE ]
-    //ret_val = send(srv_info->cmd_socket, srv_info->session_uuid, UUID_SIZE, 0);
+    //ret_val = send(srv_info->socket_descriptor, srv_info->session_uuid, UUID_SIZE, 0);
     if (ret_val == -1) {
-        fprintf(stderr, "Build_cmd_socket: Failed to send message\n");
+        log_error("Build_cmd_socket: Failed to send message\n");
         goto FAIL;
     }
     ret_val = recv(srv_info->socket_descriptor, buffer, UUID_SIZE, 0);
     if (ret_val == -1) {
-        fprintf(stderr, "Build_cmd_socket: Failed to recv message\n");
+        log_error("Build_cmd_socket: Failed to recv message\n");
         goto FAIL;
     }
     /*
@@ -81,7 +81,8 @@ int build_cmd_socket(conn_info* srv_info)
         printf("Message: %s", buffer);
     } */
     strncpy_s(srv_info->session_uuid, UUID_SIZE, buffer, UUID_SIZE);
-    printf("Session UUID succesfully set: %s\n", srv_info->session_uuid);
+    log_info("Session UUID succesfully set: %s\n", srv_info->session_uuid);
+    ret_val = ERRORCODE_SUCCESS;
 
 FAIL:
     if (NULL != buffer) {
@@ -102,7 +103,7 @@ int build_data_socket(conn_info* srv_info)
 
     char* buffer = malloc(BUFFER);
     if (buffer == NULL) {
-        fprintf(stderr, "Build_cmd_socket: buffer Malloc failed - NULL\n");
+        log_error("Build_cmd_socket: buffer Malloc failed - NULL\n");
         ret_val = -1;
         goto exit;
     }
@@ -110,7 +111,7 @@ int build_data_socket(conn_info* srv_info)
 
     //Check that a session UUID is set
     if (!strncmp(srv_info->session_uuid, "000000000-0000-0000-0000-000000000000", UUID_SIZE)) {
-        fprintf(stderr, "Build_cmd_socket: Session UUID not set\n");
+        log_error("Build_cmd_socket: Session UUID not set\n");
         ret_val = -1;
         goto exit;
     }

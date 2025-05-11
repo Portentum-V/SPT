@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 /* Project */
-#include "..\\Error\\Node_Error.h"
+#include "../Error/Node_Error.h"
 
 /* Utility functions */
 int convert_port(char* input);

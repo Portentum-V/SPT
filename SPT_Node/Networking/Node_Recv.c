@@ -16,13 +16,13 @@ int recv_message(int socket_descriptor, char* buffer, size_t buffer_size)
 
     recv_amount = recv(socket_descriptor, buffer, buffer_size, 0);
     if (-1 == recv_amount) {
-        fprintf(stderr, "recv() failed with error %d\n", recv_amount);
+        log_error("recv() failed with error %d\n", recv_amount);
     }
     else if (0 == recv_amount) {
-        printf("Recevied 0\n");
+        log_trace("Recevied 0\n");
     }
     else {
-        printf("Message: %s\n", buffer);
+        log_info("Message: %s\n", buffer);
     }
 
     return recv_amount;
@@ -43,14 +43,14 @@ int recv_file(conn_info* srv_info, char* file_name, int file_size)
 
     void* recv_buffer = malloc(BUFFER);
     if (recv_buffer == NULL) {
-        fprintf(stderr, "recv_file: failed to malloc buffer");
+        log_error("recv_file: failed to malloc buffer");
         ret_val = -1;
         goto EXIT;
     }
 
     ret_val = fopen_s(&new_file, file_name, "wb");
     if (new_file == NULL) {
-        fprintf(stderr, "Failed to open file %s", file_name);
+        log_error("Failed to open file %s", file_name);
         ret_val = -1;
         goto EXIT;
     }

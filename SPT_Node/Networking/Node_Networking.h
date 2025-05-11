@@ -1,16 +1,16 @@
 #pragma once
 
-#include "..\\Utilities\\Node_Utilities.h"
+#include "../Utilities/Node_Utilities.h"
 
 /* Socket types */
-#define SOCK_BAD	-1
-#define SOCK_STREAM	1		/* stream (connection) socket	*/
-#define SOCK_DGRAM	2		/* datagram (conn.less) socket	*/
-#define SOCK_RAW	3		/* raw socket			        */
+#define SOCK_BAD    -1
+#define SOCK_STREAM 1   /* stream (connection) socket   */
+#define SOCK_DGRAM  2   /* datagram (conn.less) socket  */
+#define SOCK_RAW    3   /* raw socket                   */
 
 /* Connection types */
-#define SOCK_CONN 1
-#define SOCK_BIND 2
+#define SOCK_CONN   1
+#define SOCK_BIND   2
 
 /* Structs */
 typedef struct conn_info {

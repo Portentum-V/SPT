@@ -18,7 +18,7 @@ int send_message(conn_info* srv_info, int socket_descriptor, char* buffer, size_
     int msg_size = UUID_SIZE + buffer_size;
     char* msg = malloc(msg_size);
     if (msg == NULL) {
-        fprintf(stderr, "send_message: Failed to malloc for msg");
+        log_error("send_message: Failed to malloc for msg");
         ret_val = -1;
         goto exit;
     }
@@ -31,10 +31,10 @@ int send_message(conn_info* srv_info, int socket_descriptor, char* buffer, size_
     ret_val = send(socket_descriptor, msg, msg_size, 0);
 
     if (-1 == ret_val) {
-        fprintf(stderr, "send() failed with error %d\n", ret_val);
+        log_error("send() failed with error %d\n", ret_val);
     }
 
-    printf("Sent %d byte message: %s\n", ret_val, msg);
+    log_trace("Sent %d byte message: %s\n", ret_val, msg);
 
 exit:
     return ret_val;
@@ -49,7 +49,7 @@ int send_dgram_message(int socketd, char* msg, size_t msg_size)
     int ret_val = 0;
 
     if ((ret_val = getsockname(socketd, &sa, &sa_len)) < 0) {
-        fprintf(stderr, "getsockname() failed, error %d\n", ret_val);
+        log_error("getsockname() failed, error %d\n", ret_val);
         return -1;
     }
     return sendto(socketd, msg, msg_size, 0, &sa, sa_len);

@@ -10,10 +10,10 @@ struct ulid_generator* g_ulid_gen = NULL;
 int init_ulid(void)
 {
     /* ulid generator already ready */
-    RET_IF(NULL != g_ulid_gen, ERRORCODE_REINIT, ERRORCODE_REINIT);
+    RET_IF(NULL != g_ulid_gen, ERRORCODE_REINIT, ERRORCODE_REINIT)
 
     g_ulid_gen = calloc(1, sizeof(struct ulid_generator));
-    RET_IF(NULL == g_ulid_gen, ERRORCODE_ALLOCATE, ERRORCODE_ALLOCATE);
+    RET_IF(NULL == g_ulid_gen, ERRORCODE_ALLOCATE, ERRORCODE_ALLOCATE)
 
     /* 1 = userspace entropy, 0 = system entropy */
     return ulid_generator_init(g_ulid_gen, ULID_RELAXED);
@@ -40,17 +40,17 @@ void get_hostinfo(void)
     int cpuid_flags;
     char hostname[257] = { '\0' };
 
-    printf("\nGathering host information:\n");
+    log_info("\nGathering host information:\n");
 
     cpuid_flags = get_cpuid_flags();
-    printf("CPUID: %d\n", cpuid_flags);
+    log_info("CPUID: %d\n", cpuid_flags);
 
 #ifdef OS_WIN
-    JMP_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, DONE);
+    JMP_IF(ERRORCODE_SUCCESS != start_wsa(), ERRORCODE_WSA, DONE)
 #endif
 
     gethostname(hostname, 256);
-    printf("Hostname: %s\n\n", hostname);
+    log_info("Hostname: %s\n\n", hostname);
 
     void* buffer = malloc(UUID_SIZE);
     get_mac_address(buffer);
