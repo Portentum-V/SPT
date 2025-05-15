@@ -13,3 +13,6 @@
 [submodule "SPT_Interface/Xolor"]
 	path = SPT_Interface/Xolor
 	url = git@github.com:Portentum-V/Xolor.git
+[submodule "SPT_Node/Utilities/zlib"]
+	path = SPT_Node/Utilities/zlib
+	url = git@github.com:madler/zlib.git

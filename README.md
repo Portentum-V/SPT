@@ -90,3 +90,9 @@ This project will be an effort to build lightweight c programs that can provide 
 ## Asumptions 
  - MTU of 1280: All non-local messages will be 1166 bytes max
  - Minimum IPv6 MTU 1280 - Max TCP Header 60 - IPv6 Header 40 - Ethernet Header 14 = 1166
+
+# nanopb
+- https://github.com/nanopb/nanopb
+```
+python .\nanopb\generator\nanopb_generator.py message.proto
+```
